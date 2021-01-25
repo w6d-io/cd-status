@@ -1,23 +1,28 @@
 /*
-Copyright 2020 WILDCARD SA.
+Copyright 2020 WILDCARD
 
-Licensed under the WILDCARD SA License, Version 1.0 (the "License");
-WILDCARD SA is register in french corporation.
-You may not use this file except in compliance with the License.
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.w6d.io/licenses/LICENSE-1.0
+    http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
-distributed under the License is prohibited.
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
 Created on 22/01/2021
 */
 
 package config
 
 import (
+	"errors"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
+	"net/url"
+	"time"
 
 	ctrl "sigs.k8s.io/controller-runtime"
 )
@@ -36,5 +41,42 @@ func New(filename string) error {
 		log.Error(err, "Error unmarshal the configuration")
 		return err
 	}
+	for i, wh := range config.Webhooks {
+		if wh.URLRaw != "" {
+			config.Webhooks[i].url, err = url.Parse(wh.URLRaw)
+			if err != nil {
+				log.Error(err, "url "+wh.URLRaw+" parse failed")
+				return err
+			}
+			if config.Webhooks[i].url.Scheme == "kafka" {
+				values := config.Webhooks[i].url.Query()
+				if _, ok := values["topic"]; !ok {
+					log.Error(errors.New("missing topic"), wh.URLRaw)
+					return errors.New("missing topic")
+				}
+			}
+		}
+	}
+	if config.Timeout == 0 {
+		config.Timeout = int64(time.Minute * 60)
+	}
+	if config.Listen == "" {
+		config.Listen = ":8080"
+	}
 	return nil
+}
+
+// GetConfig return the Config instance
+func GetConfig() *Config {
+	return config
+}
+
+// GetListen return the listening address for api
+func GetListen() string {
+	return config.Listen
+}
+
+// GetTimeout return the timeout set in config
+func GetTimeout() int64 {
+	return config.Timeout
 }

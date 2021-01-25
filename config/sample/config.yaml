@@ -1,0 +1,12 @@
+---
+listen: ":8080"
+timeout: 60
+redis:
+  address: localhost:6379
+  password: 'to-change'
+auth:
+  - username: "test"
+    password: "test"
+webhooks:
+  - url: "kafka://localhost:9092?topic=MYTOPIC"
+  - url: "http://localhost:8001/test"

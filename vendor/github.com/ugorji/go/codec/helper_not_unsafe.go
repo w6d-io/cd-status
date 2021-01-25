@@ -1,11 +1,13 @@
-// +build !go1.7 safe appengine
+// +build !go1.8 safe appengine
 
-// Copyright (c) 2012-2018 Ugorji Nwoke. All rights reserved.
+// Copyright (c) 2012-2020 Ugorji Nwoke. All rights reserved.
 // Use of this source code is governed by a MIT license found in the LICENSE file.
 
 package codec
 
 import (
+	// "hash/adler32"
+	"math"
 	"reflect"
 	"sync/atomic"
 	"time"
@@ -33,6 +35,10 @@ func bytesView(v string) []byte {
 	return []byte(v)
 }
 
+// func copyBytes(dst []byte, src []byte) {
+// 	copy(dst, src)
+// }
+
 // isNil says whether the value v is nil.
 // This applies to references like map/ptr/unsafepointer/chan/func,
 // and non-reference values like interface/slice.
@@ -44,12 +50,24 @@ func isNil(v interface{}) (rv reflect.Value, isnil bool) {
 	return
 }
 
+// func rvAddr(rv reflect.Value) uintptr {
+// 	return rv.UnsafeAddr()
+// }
+
+func eq4i(i0, i1 interface{}) bool {
+	return i0 == i1
+}
+
 func rv4i(i interface{}) reflect.Value {
 	return reflect.ValueOf(i)
 }
 
 func rv2i(rv reflect.Value) interface{} {
 	return rv.Interface()
+}
+
+func rvType(rv reflect.Value) reflect.Type {
+	return rv.Type()
 }
 
 func rvIsNil(rv reflect.Value) bool {
@@ -62,6 +80,18 @@ func rvSetSliceLen(rv reflect.Value, length int) {
 
 func rvZeroAddrK(t reflect.Type, k reflect.Kind) reflect.Value {
 	return reflect.New(t).Elem()
+}
+
+func rvZeroAddr(t reflect.Type) reflect.Value {
+	return reflect.New(t).Elem()
+}
+
+func rvZeroK(t reflect.Type, k reflect.Kind) reflect.Value {
+	return reflect.Zero(t)
+}
+
+func rvZero(t reflect.Type) reflect.Value {
+	return reflect.Zero(t)
 }
 
 func rvConvert(v reflect.Value, t reflect.Type) (rv reflect.Value) {
@@ -78,30 +108,35 @@ func i2rtid(i interface{}) uintptr {
 
 // --------------------------
 
-func isEmptyValue(v reflect.Value, tinfos *TypeInfos, deref, checkStruct bool) bool {
+func isEmptyValue(v reflect.Value, tinfos *TypeInfos, recursive bool) bool {
 	switch v.Kind() {
 	case reflect.Invalid:
 		return true
-	case reflect.Array, reflect.Map, reflect.Slice, reflect.String:
+	case reflect.Array, reflect.String:
 		return v.Len() == 0
+	case reflect.Map, reflect.Slice, reflect.Chan:
+		return v.IsNil() || v.Len() == 0
 	case reflect.Bool:
 		return !v.Bool()
 	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
 		return v.Int() == 0
 	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Uintptr:
 		return v.Uint() == 0
+	case reflect.Complex64, reflect.Complex128:
+		c := v.Complex()
+		return math.Float64bits(real(c)) == 0 && math.Float64bits(imag(c)) == 0
 	case reflect.Float32, reflect.Float64:
 		return v.Float() == 0
-	case reflect.Interface, reflect.Ptr:
-		if deref {
-			if v.IsNil() {
-				return true
-			}
-			return isEmptyValue(v.Elem(), tinfos, deref, checkStruct)
-		}
+	case reflect.Func, reflect.UnsafePointer:
 		return v.IsNil()
+	case reflect.Interface, reflect.Ptr:
+		isnil := v.IsNil()
+		if recursive && !isnil {
+			return isEmptyValue(v.Elem(), tinfos, recursive)
+		}
+		return isnil
 	case reflect.Struct:
-		return isEmptyStruct(v, tinfos, deref, checkStruct)
+		return isEmptyStruct(v, tinfos, recursive)
 	}
 	return false
 }
@@ -123,7 +158,7 @@ func (x *atomicClsErr) store(p clsErr) {
 }
 
 // --------------------------
-type atomicTypeInfoSlice struct { // expected to be 2 words
+type atomicTypeInfoSlice struct {
 	v atomic.Value
 }
 
@@ -139,7 +174,7 @@ func (x *atomicTypeInfoSlice) store(p []rtid2ti) {
 }
 
 // --------------------------
-type atomicRtidFnSlice struct { // expected to be 2 words
+type atomicRtidFnSlice struct {
 	v atomic.Value
 }
 
@@ -155,25 +190,25 @@ func (x *atomicRtidFnSlice) store(p []codecRtidFn) {
 }
 
 // --------------------------
-func (n *decNaked) ru() reflect.Value {
+func (n *fauxUnion) ru() reflect.Value {
 	return rv4i(&n.u).Elem()
 }
-func (n *decNaked) ri() reflect.Value {
+func (n *fauxUnion) ri() reflect.Value {
 	return rv4i(&n.i).Elem()
 }
-func (n *decNaked) rf() reflect.Value {
+func (n *fauxUnion) rf() reflect.Value {
 	return rv4i(&n.f).Elem()
 }
-func (n *decNaked) rl() reflect.Value {
+func (n *fauxUnion) rl() reflect.Value {
 	return rv4i(&n.l).Elem()
 }
-func (n *decNaked) rs() reflect.Value {
+func (n *fauxUnion) rs() reflect.Value {
 	return rv4i(&n.s).Elem()
 }
-func (n *decNaked) rt() reflect.Value {
+func (n *fauxUnion) rt() reflect.Value {
 	return rv4i(&n.t).Elem()
 }
-func (n *decNaked) rb() reflect.Value {
+func (n *fauxUnion) rb() reflect.Value {
 	return rv4i(&n.b).Elem()
 }
 
@@ -253,6 +288,10 @@ func rvSetDirect(rv reflect.Value, v reflect.Value) {
 	rv.Set(v)
 }
 
+func rvSetDirectZero(rv reflect.Value) {
+	rv.Set(reflect.Zero(rv.Type()))
+}
+
 // rvSlice returns a slice of the slice of lenth
 func rvSlice(rv reflect.Value, length int) reflect.Value {
 	return rv.Slice(0, length)
@@ -264,11 +303,15 @@ func rvSliceIndex(rv reflect.Value, i int, ti *typeInfo) reflect.Value {
 	return rv.Index(i)
 }
 
-func rvGetSliceLen(rv reflect.Value) int {
+func rvSliceZeroCap(t reflect.Type) (v reflect.Value) {
+	return reflect.MakeSlice(t, 0, 0)
+}
+
+func rvLenSlice(rv reflect.Value) int {
 	return rv.Len()
 }
 
-func rvGetSliceCap(rv reflect.Value) int {
+func rvCapSlice(rv reflect.Value) int {
 	return rv.Cap()
 }
 
@@ -288,7 +331,7 @@ func rvGetArrayBytesRO(rv reflect.Value, scratch []byte) (bs []byte) {
 }
 
 func rvGetArray4Slice(rv reflect.Value) (v reflect.Value) {
-	v = rvZeroAddrK(reflectArrayOf(rvGetSliceLen(rv), rv.Type().Elem()), reflect.Array)
+	v = rvZeroAddrK(reflectArrayOf(rvLenSlice(rv), rvType(rv).Elem()), reflect.Array)
 	reflect.Copy(v, rv)
 	return
 }
@@ -371,6 +414,14 @@ func rvGetUintptr(rv reflect.Value) uintptr {
 	return uintptr(rv.Uint())
 }
 
+func rvLenMap(rv reflect.Value) int {
+	return rv.Len()
+}
+
+func rvLenArray(rv reflect.Value) int {
+	return rv.Len()
+}
+
 // ------------ map range and map indexing ----------
 
 func mapGet(m, k, v reflect.Value) (vv reflect.Value) {
@@ -381,14 +432,14 @@ func mapSet(m, k, v reflect.Value) {
 	m.SetMapIndex(k, v)
 }
 
-func mapDelete(m, k reflect.Value) {
-	m.SetMapIndex(k, reflect.Value{})
-}
+// func mapDelete(m, k reflect.Value) {
+// 	m.SetMapIndex(k, reflect.Value{})
+// }
 
 // return an addressable reflect value that can be used in mapRange and mapGet operations.
 //
 // all calls to mapGet or mapRange will call here to get an addressable reflect.Value.
-func mapAddressableRV(t reflect.Type, k reflect.Kind) (r reflect.Value) {
+func mapAddrLoopvarRV(t reflect.Type, k reflect.Kind) (r reflect.Value) {
 	return // reflect.New(t).Elem()
 }
 
@@ -407,3 +458,48 @@ func (d *Decoder) checkBreak() bool {
 func (d *Decoder) jsondriver() *jsonDecDriver {
 	return d.d.(*jsonDecDriver)
 }
+
+// ---------- structFieldInfo optimized ---------------
+
+func (n *structFieldInfoPathNode) rvField(v reflect.Value) reflect.Value {
+	return v.Field(int(n.index))
+}
+
+// ---------- others ---------------
+
+/*
+
+   func hashShortString(b []byte) (h uintptr) {
+	return uintptr(adler32.Checksum(b))
+}
+
+// func hashShortString(b []byte) (h uint64) {
+// 	// culled from https://github.com/golang/go/issues/32779#issuecomment-735494578
+// 	// Read the string in two parts using wide-integer loads.
+// 	// The prefix and suffix may overlap, which is fine.
+// 	switch {
+// 	case len(b) > 8:
+// 		h ^= binary.LittleEndian.Uint64(b[:8])
+// 		h *= 0x00000100000001B3 // inspired by FNV-64
+// 		h ^= binary.LittleEndian.Uint64(b[len(b)-8:])
+// 	case len(b) > 4:
+// 		h ^= uint64(binary.LittleEndian.Uint32(b[:4]))
+// 		h *= 0x01000193 // inspired by FNV-32
+// 		h ^= uint64(binary.LittleEndian.Uint32(b[len(b)-4:]))
+// 	default:
+// 		h ^= uint64(binary.LittleEndian.Uint16(b[:2]))
+// 		h *= 0x010f // inspired by hypothetical FNV-16
+// 		h ^= uint64(binary.LittleEndian.Uint16(b[len(b)-2:]))
+// 	}
+//
+// 	// Collapse a 64-bit, 32-bit, or 16-bit hash into an 8-bit hash.
+// 	h ^= h >> 32
+// 	h ^= h >> 16
+// 	h ^= h >> 8
+//
+// 	// The cache has 8 buckets based on the lower 3-bits of the length.
+// 	h = ((h << 3) | uint64(len(b)&7))
+// 	return
+// }
+
+*/
