@@ -104,6 +104,8 @@ github.com/google/uuid
 github.com/googleapis/gnostic/compiler
 github.com/googleapis/gnostic/extensions
 github.com/googleapis/gnostic/openapiv2
+# github.com/hako/durafmt v0.0.0-20191009132224-3f39dc1ed9f4
+github.com/hako/durafmt
 # github.com/hashicorp/golang-lru v0.5.4
 github.com/hashicorp/golang-lru
 github.com/hashicorp/golang-lru/simplelru
@@ -195,6 +197,7 @@ github.com/spf13/pflag
 # github.com/tektoncd/cli v0.15.0
 ## explicit
 github.com/tektoncd/cli/pkg/cli
+github.com/tektoncd/cli/pkg/formatted
 # github.com/tektoncd/pipeline v0.19.0
 ## explicit
 github.com/tektoncd/pipeline/pkg/apis/config

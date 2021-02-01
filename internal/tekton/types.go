@@ -17,15 +17,50 @@ Created on 24/01/2021
 package tekton
 
 import (
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	ctrl "sigs.k8s.io/controller-runtime"
 
 	"k8s.io/apimachinery/pkg/types"
 )
 
 type Tekton struct {
-	Namespaced types.NamespacedName
+	ProjectID  int64                `json:"project_id"`
+	PipelineID int64                `json:"pipeline_id"`
+	Namespaced types.NamespacedName `json:"namespaced"`
+	TaskRun    TaskRun              `json:"task_run"`
+}
+
+type TaskRun struct {
+	Name  string `json:"name"`
+	Tasks Tasks  `json:"tasks"`
+}
+
+type Tasks []Task
+
+type Task struct {
+	Name      string `json:"name"`
+	Status    string `json:"status"`
+	StartTime string `json:"start_time"`
+	Duration  string `json:"duration"`
+	Message   string `json:"message"`
+	Steps     []Step `json:"steps"`
+
+	CompletionTimeRaw *metav1.Time `json:"completion_time_raw"`
+	StartTimeRaw      *metav1.Time `json:"start_time_raw"`
+}
+
+type Step struct {
+	Name    string `json:"name"`
+	Status  string `json:"status"`
+	Message string `json:"message"`
 }
 
 var (
 	logger = ctrl.Log.WithName("tekton")
 )
+
+type PipelineRunPayload struct {
+	NamespacedName types.NamespacedName `json:"namespaced_name"`
+	Status         string               `json:"status"`
+	Message        string               `json:"message"`
+}

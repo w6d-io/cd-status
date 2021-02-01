@@ -14,7 +14,7 @@ var _ = Describe("Log", func() {
 	)
 	Describe("For gin gonic", func() {
 		Context("log output", func() {
-			outputFunc := router.JSONLogMiddleware()
+			outputFunc := router.LogMiddleware()
 			It("gin output handlerFunc", func() {
 				Expect(outputFunc).ToNot(BeNil())
 			})
@@ -48,7 +48,7 @@ var _ = Describe("Log", func() {
 			})
 			Context("Gin handler function", func() {
 				It("Json log", func() {
-					jsonLog := router.JSONLogMiddleware()
+					jsonLog := router.LogMiddleware()
 					c.Request.Method = "POST"
 					jsonLog(c)
 				})

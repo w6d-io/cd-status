@@ -80,3 +80,19 @@ func GetListen() string {
 func GetTimeout() int64 {
 	return config.Timeout
 }
+
+// SetTimeout record the timeout in config
+func SetTimeout(timeout int64) error {
+	config.Timeout = timeout
+	return nil
+}
+
+// SetAuth return the auth list from config
+func SetAuth(auth []Auth) {
+	config.Auth = auth
+}
+
+// GetAuth return the auth list from config
+func GetAuth() []Auth {
+	return config.Auth
+}

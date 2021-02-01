@@ -12,6 +12,17 @@ distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
-Created on 24/01/2021
+Created on 26/01/2021
 */
-package watch
+package pipelinerun_test
+
+import (
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
+	"testing"
+)
+
+func TestPipelineRun(t *testing.T) {
+	RegisterFailHandler(Fail)
+	RunSpecs(t, "PipelineRun Suite")
+}

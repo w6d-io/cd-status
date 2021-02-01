@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
-	"github.com/w6d-io/ci-status/api/watch"
+	"github.com/w6d-io/ci-status/pkg/watch"
 	"k8s.io/apimachinery/pkg/util/framer"
 
 	. "github.com/onsi/ginkgo"
@@ -48,7 +48,7 @@ var _ = Describe("Watch", func() {
 					c.Request = &http.Request{
 						Body: framer.NewJSONFramedReader(r),
 					}
-					watch.Watch(c)
+					watch.Play(c)
 				})
 			})
 		})
@@ -70,7 +70,7 @@ var _ = Describe("Watch", func() {
 					c, _ := gin.CreateTestContext(w)
 					c.Request = &http.Request{
 						Body: framer.NewJSONFramedReader(r)}
-					watch.Watch(c)
+					watch.Play(c)
 				})
 				It("payload object kind is not supported", func() {
 					payload := `
@@ -89,7 +89,7 @@ var _ = Describe("Watch", func() {
 					c, _ := gin.CreateTestContext(w)
 					c.Request = &http.Request{
 						Body: framer.NewJSONFramedReader(r)}
-					watch.Watch(c)
+					watch.Play(c)
 				})
 				It("Scan return an error", func() {
 					payload := `
@@ -108,8 +108,7 @@ var _ = Describe("Watch", func() {
 					c, _ := gin.CreateTestContext(w)
 					c.Request = &http.Request{
 						Body: framer.NewJSONFramedReader(r)}
-					watch.Watch(c)
-
+					watch.Play(c)
 				})
 			})
 		})

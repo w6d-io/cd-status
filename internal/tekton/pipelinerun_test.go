@@ -19,6 +19,7 @@ package tekton_test
 import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"github.com/w6d-io/ci-status/internal/config"
 
 	"github.com/w6d-io/ci-status/internal/tekton"
 	"k8s.io/apimachinery/pkg/types"
@@ -28,26 +29,54 @@ var _ = Describe("Tekton", func() {
 	Context("Supervise", func() {
 		When("timeout is reached", func() {
 			It("get out the loop", func() {
-
+				config.SetTimeout(0)
+				t := &tekton.Tekton{
+					Namespaced: types.NamespacedName{
+						Name:      "pod-test-1-1",
+						Namespace: "default",
+					},
+				}
+				Expect(t.Supervise()).To(BeNil())
 			})
 		})
 	})
 	Context("GetWatch", func() {
-		BeforeEach(func() {
-
-		})
-		AfterEach(func() {
-
-		})
-		When("resource exists", func() {
-			It("get the watch instance", func() {
+		When("resource does not exist", func() {
+			It("returns not nil for pods", func() {
 				t := &tekton.Tekton{
 					Namespaced: types.NamespacedName{
-						Name: "pipeline-run-test-1-1",
+						Name:      "pod-test-1-1",
 						Namespace: "default",
 					},
 				}
-				Expect(t.GetWatch()).ToNot(BeNil())
+				Expect(t.GetWatch("pods")).ToNot(BeNil())
+			})
+			It("returns not nil for pipelineruns", func() {
+				t := &tekton.Tekton{
+					Namespaced: types.NamespacedName{
+						Name:      "pipeline-run-test-1-1",
+						Namespace: "default",
+					},
+				}
+				Expect(t.GetWatch("pipelineruns")).ToNot(BeNil())
+			})
+			It("returns not nil for taskruns", func() {
+				t := &tekton.Tekton{
+					Namespaced: types.NamespacedName{
+						Name:      "taskrun-test-1-1",
+						Namespace: "default",
+					},
+				}
+				Expect(t.GetWatch("taskruns")).ToNot(BeNil())
+			})
+			It("returns nil for not supported kind", func() {
+				t := &tekton.Tekton{
+					Namespaced: types.NamespacedName{
+						Name:      "not-supported-test",
+						Namespace: "default",
+					},
+				}
+				Expect(t.GetWatch("not-supported")).To(BeNil())
 			})
 		})
 	})

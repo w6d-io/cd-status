@@ -28,9 +28,10 @@ import (
 var (
 	logger = ctrl.Log.WithName("watch")
 )
-// Watch gets the payload and determine the resource to scan
-func Watch(c *gin.Context) {
-	log := logger.WithName("Watch")
+
+// Play gets the play payload and determine the resource to scan
+func Play(c *gin.Context) {
+	log := logger.WithName("Play")
 	var (
 		payload Payload
 		scan    func(Payload) error
@@ -44,7 +45,7 @@ func Watch(c *gin.Context) {
 	log = log.WithValues("kind", payload.Object.Kind)
 	if scan, ok = scans[payload.Object.Kind]; !ok {
 		log.Error(errors.New(payload.Object.Kind+" does not supported"), "BindJSON")
-		c.JSON(http.StatusNotImplemented, gin.H{"status": "error", "message": payload.Object.Kind+" does not supported"})
+		c.JSON(http.StatusNotImplemented, gin.H{"status": "error", "message": payload.Object.Kind + " does not supported"})
 		return
 	}
 	if err := scan(payload); err != nil {
@@ -54,6 +55,6 @@ func Watch(c *gin.Context) {
 }
 
 // AddWatcher inserts method to scans map
-func AddWatcher(name string, w func(Payload) error) {
+func AddWatcher(name string, w func(payload Payload) error) {
 	scans[name] = w
 }

@@ -14,24 +14,4 @@ See the License for the specific language governing permissions and
 limitations under the License.
 Created on 24/01/2021
 */
-package watch
-
-type Interface interface {
-	Scan(Payload) error
-}
-
-//type Scan func() error
-
-var scans = make(map[string]func(Payload) error)
-
-type Payload struct {
-	Object     Object `json:"object,omitempty"`
-	ProjectID  int64  `json:"project_id,omitempty"`
-	PipelineID int64  `json:"pipeline_id,omitempty"`
-	RepoURL    string `json:"repo_url,omitempty"`
-}
-
-type Object struct {
-	Name string `json:"name,omitempty"`
-	Kind string `json:"kind,omitempty"`
-}
+package taskrun

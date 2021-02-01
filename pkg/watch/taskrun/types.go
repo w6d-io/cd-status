@@ -12,26 +12,6 @@ distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
-Created on 24/01/2021
+Created on 27/01/2021
 */
-package watch
-
-type PipelineRun struct {
-
-}
-
-var pipelineRun Interface
-
-func init() {
-	pipelineRun = new(PipelineRun)
-	AddWatcher("pipelinerun", pipelineRun.Scan)
-}
-
-func (p PipelineRun) Scan(payload Payload) error {
-	log := logger.WithName("Scan").
-		WithValues("kind", payload.Object.Kind).
-		WithValues("name", payload.Object.Name)
-	log.V(1).Info("start")
-
-	return nil
-}
+package taskrun

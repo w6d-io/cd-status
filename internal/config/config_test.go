@@ -22,12 +22,12 @@ var _ = Describe("Config", func() {
 			})
 			It("webhook bad entry", func() {
 				Expect(config.New("../../test/config/file4.yaml").Error()).
-					Should(ContainSubstring(errors.New("did not find expected key").Error()))
+					Should(ContainSubstring("first path segment in URL cannot contain colon"))
 			})
 		})
 		Context("Validate config", func() {
 			It("File exist", func() {
-				Expect(config.New("../../test/config/file1.yaml"))
+				Expect(config.New("../../test/config/file1.yaml")).To(BeNil())
 			})
 			It("is auth enabled ?", func() {
 				Expect(config.IsAuth()).Should(Equal(true))
@@ -37,6 +37,10 @@ var _ = Describe("Config", func() {
 			})
 			It("get listen api address", func() {
 				Expect(config.GetListen()).To(Equal(":8080"))
+			})
+			It("get auth", func() {
+				config.SetAuth([]config.Auth{{"test", "test"}})
+				Expect(config.GetAuth()).To(Equal([]config.Auth{{"test", "test"}}))
 			})
 		})
 	})

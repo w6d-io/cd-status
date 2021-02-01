@@ -20,25 +20,25 @@ package router
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/w6d-io/ci-status/internal/config"
+	"github.com/w6d-io/ci-status/pkg/watch"
 )
 
 // New initializes the engine instance
 func New() error {
 	engine = gin.New()
-	engine.Use(JSONLogMiddleware())
+	engine.Use(LogMiddleware())
 	engine.Use(gin.Recovery())
 	engine.Use(CorrelationID())
 	if config.IsAuth() {
 		engine.Use(Auth())
 	}
-	AddPOST("/watch")
+	AddPOST("/watch/play", watch.Play)
 	return nil
 }
 
 // AddPOST adds handler and path to the engine
-func AddPOST(relativePath string, handlers ...gin.HandlerFunc) error {
+func AddPOST(relativePath string, handlers ...gin.HandlerFunc) {
 	engine.POST(relativePath, handlers...)
-	return nil
 }
 
 // Run execute le gin router

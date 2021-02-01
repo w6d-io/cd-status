@@ -19,13 +19,19 @@ var _ = Describe("Router", func() {
 	})
 	Context("update router engine", func() {
 		It("add a post handler", func() {
-			Expect(router.AddPOST("/test/unit", func(c *gin.Context) {})).To(BeNil())
+			router.AddPOST("/test/unit", func(c *gin.Context) {})
 		})
 		When("Auth is not empty", func() {
 			It("initialize engine", func() {
-				config.GetConfig().Auth = []config.Auth{{"test", "test"}}
+				auth := []config.Auth{{Username: "test", Password: "test"}}
+				config.SetAuth(auth)
 				Expect(router.New()).To(BeNil())
 			})
 		})
+	})
+	Context("The engine", func() {
+		It("runs", func() {
+			//Expect(router.Run().Error()).To(Equal(""))
+		}, 0)
 	})
 })

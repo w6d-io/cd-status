@@ -17,50 +17,64 @@ Created on 24/01/2021
 package tekton
 
 import (
+	"context"
 	"fmt"
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"sync"
 	"time"
 
-	"github.com/tektoncd/cli/pkg/cli"
+	tkn "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
+
 	"github.com/w6d-io/ci-status/internal/config"
-	"k8s.io/apimachinery/pkg/watch"
 )
 
 // Supervise watches all pod event created by pipelinerun
 func (t *Tekton) Supervise() error {
 	log := logger.WithName("Supervise").WithValues("object", t.Namespaced.String())
-	//ctx, cancel := context.WithCancel(context.Background())
-	//defer cancel()
+	prw := t.GetWatch("pipelinerun")
+	if prw == nil {
+		return fmt.Errorf("pipelinerun %s not found", t.Namespaced.String())
+	}
 	timeout := time.NewTimer(time.Duration(config.GetTimeout()))
-
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	defer prw.Stop()
 	for {
 		select {
 		case <-timeout.C:
 			log.Info("timeout")
 			return nil
+		case <-ctx.Done():
+			log.Info("context Done")
+			return nil
+		case prc := <-prw.ResultChan():
+			if prc.Object == nil {
+				log.Info("timeout")
+				// TODO notify
+				return nil
+			}
+			t.SupTasks(prc.Object.(*tkn.PipelineRun))
 		}
 	}
-
 }
 
-// GetWatch gets the watch interface
-func (t *Tekton) GetWatch() (w watch.Interface) {
-	log := logger.WithName("GetWatch").WithValues("object", t.Namespaced.String())
+// SupTask loops task watch
+func (t *Tekton) SupTasks(pr *tkn.PipelineRun) {
+	log := logger.WithName("SupTasks").WithValues("object", t.Namespaced.String())
+	var wg sync.WaitGroup
+	// TODO Notify
+	currentTask := make(map[string]bool)
+	for _, task := range t.GetTask(pr) {
+		if currentTask[task.Name] {
+			continue
+		}
+		rlog := log.V(1).WithValues("name", task.Name)
+		rlog.Info("work")
+		currentTask[task.Name] = true
+		go func(wg *sync.WaitGroup, name string) {
+			rlog.V(1).Info("Add waite")
+			wg.Add(1)
 
-	tknParam := cli.TektonParams{}
-	tknParam.SetNamespace(t.Namespaced.Namespace)
-	cs, err := tknParam.Clients()
-	if err != nil {
-		log.Error(err, "create tekton k8s api client")
-		return nil
+			wg.Done()
+		}(&wg, task.Name)
 	}
-	timeout := config.GetTimeout()
-	opts := v1.ListOptions{
-		FieldSelector:  fmt.Sprintf("metadata.name=%s", prName),
-		TimeoutSeconds: &timeout,
-	}
-	switch expr {
-	
-	}
-	return
 }

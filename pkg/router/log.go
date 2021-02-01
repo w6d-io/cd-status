@@ -29,8 +29,8 @@ import (
 	"github.com/google/uuid"
 )
 
-// JSONLogMiddleware logs a gin HTTP request in JSON format, with some additional custom key/values
-func JSONLogMiddleware() gin.HandlerFunc {
+// LogMiddleware logs a gin HTTP request in JSON format, with some additional custom key/values
+func LogMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		log := ctrl.Log.WithName("gin")
 		// Start timer
@@ -54,7 +54,7 @@ func JSONLogMiddleware() gin.HandlerFunc {
 			"client_ip", GetClientIP(c),
 			"duration", duration,
 			"method", c.Request.Method,
-			"path", c.Request.RequestURI,
+			"uri", c.Request.RequestURI,
 			"status", status,
 			"referrer", c.Request.Referer(),
 			"correlation_id", corID,
