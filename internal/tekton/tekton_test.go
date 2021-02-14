@@ -33,9 +33,11 @@ var _ = Describe("Tekton", func() {
 		When("resource does not exist", func() {
 			It("returns not nil for pods", func() {
 				t := &tekton.Tekton{
-					Namespaced: types.NamespacedName{
-						Name:      "pod-test-1-1",
-						Namespace: "default",
+					PipelineRun: tekton.PipelineRunPayload{
+						NamespacedName: types.NamespacedName{
+							Name:      "pod-test-1-1",
+							Namespace: "default",
+						},
 					},
 				}
 				Expect(t.GetWatch("pods")).ToNot(BeNil())
@@ -46,9 +48,11 @@ var _ = Describe("Tekton", func() {
 		When("resource does not exist", func() {
 			It("returns nil for pods", func() {
 				t := &tekton.Tekton{
-					Namespaced: types.NamespacedName{
-						Name:      "pod-test-1-1",
-						Namespace: "default",
+					PipelineRun: tekton.PipelineRunPayload{
+						NamespacedName: types.NamespacedName{
+							Name:      "pod-test-1-1",
+							Namespace: "default",
+						},
 					},
 				}
 				pr := &tkn.PipelineRun{

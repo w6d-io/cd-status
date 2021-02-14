@@ -20,41 +20,44 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/jonboulle/clockwork"
-	tkn "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
 	"sort"
+	"strings"
 
+	tkn "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
+	"github.com/jonboulle/clockwork"
 	"github.com/tektoncd/cli/pkg/cli"
 	"github.com/tektoncd/cli/pkg/formatted"
 	"github.com/w6d-io/ci-status/internal/config"
 	"k8s.io/apimachinery/pkg/watch"
+	"knative.dev/pkg/apis/duck/v1beta1"
 )
 
 // GetWatch gets the watch interface for pipelineruns, taskruns and pods
 func (t *Tekton) GetWatch(kind string) (w watch.Interface) {
-	log := logger.WithName("GetWatch").WithValues("object", t.Namespaced.String(), "kind", kind)
-
+	log := logger.WithName("GetWatch").WithValues("object", t.PipelineRun.NamespacedName.String(), "kind", kind)
+	namespace := t.PipelineRun.NamespacedName.Namespace
 	tknParam := cli.TektonParams{}
-	tknParam.SetNamespace(t.Namespaced.Namespace)
+	tknParam.SetNamespace(namespace)
 	cs, err := tknParam.Clients()
 	if err != nil {
 		log.Error(err, "create tekton k8s api client")
 		return nil
 	}
-	timeout := config.GetTimeout()
+	timeout := int64(config.GetTimeout().Seconds())
 	opts := metav1.ListOptions{
-		FieldSelector:  fmt.Sprintf("metadata.name=%s", t.Namespaced.Name),
+		FieldSelector:  fmt.Sprintf("metadata.name=%s", t.PipelineRun.NamespacedName.Name),
 		TimeoutSeconds: &timeout,
 	}
 	switch kind {
 	case "pipelinerun", "pipelineruns":
-		w, err = cs.Tekton.TektonV1beta1().PipelineRuns(t.Namespaced.Namespace).Watch(context.TODO(), opts)
+		w, err = cs.Tekton.TektonV1beta1().PipelineRuns(namespace).Watch(context.TODO(), opts)
 	case "taskrun", "taskruns":
-		w, err = cs.Tekton.TektonV1beta1().TaskRuns(t.Namespaced.Namespace).Watch(context.TODO(), opts)
+		w, err = cs.Tekton.TektonV1beta1().TaskRuns(namespace).Watch(context.TODO(), opts)
 	case "po", "pod", "pods":
-		w, err = cs.Kube.CoreV1().Pods(t.Namespaced.Namespace).Watch(context.TODO(), opts)
+		w, err = cs.Kube.CoreV1().Pods(namespace).Watch(context.TODO(), opts)
 	default:
 		log.Error(errors.New("kind not supported"), "")
 		return nil
@@ -67,7 +70,7 @@ func (t *Tekton) GetWatch(kind string) (w watch.Interface) {
 }
 
 func (t *Tekton) GetTask(pr *tkn.PipelineRun) (ts Tasks) {
-	log := logger.WithName("GetTask").WithValues("object", t.Namespaced.String())
+	log := logger.WithName("GetTask").WithValues("object", t.PipelineRun.NamespacedName.String())
 	if len(pr.Status.TaskRuns) > 0 {
 		for _, taskrunStatus := range pr.Status.TaskRuns {
 			task := Task{
@@ -105,4 +108,41 @@ func (t Tasks) Less(i, j int) bool {
 		return true
 	}
 	return t[j].StartTimeRaw.Before(t[i].StartTimeRaw)
+}
+
+// GetStatusReason returns a human readable text based on the status of the Condition
+func GetStatusReason(c v1beta1.Conditions) (status string, reason string) {
+	if len(c) == 0 {
+		return "---", ""
+	}
+
+	switch c[0].Status {
+	case corev1.ConditionFalse:
+		status = "Failed"
+	case corev1.ConditionTrue:
+		status = "Succeeded"
+	case corev1.ConditionUnknown:
+		status = "Running"
+	}
+	cStatus := status
+
+	if c[0].Reason != "" && c[0].Reason != status {
+
+		if c[0].Reason == "PipelineRunCancelled" || c[0].Reason == "TaskRunCancelled" {
+			reason = Reason["default"]
+			if _, ok := Reason[strings.ToLower(c[0].Reason)]; ok {
+				reason = Reason[strings.ToLower(c[0].Reason)]
+			}
+			status = "Cancelled"
+		} else if c[0].Reason != status {
+			reason = Reason["default"]
+			if _, ok := Reason[strings.ToLower(c[0].Reason)]; ok {
+				reason = Reason[strings.ToLower(c[0].Reason)]
+			}
+			status = cStatus
+		}
+	} else {
+		status = cStatus
+	}
+	return
 }

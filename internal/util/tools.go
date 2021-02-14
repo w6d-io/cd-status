@@ -21,3 +21,13 @@ package util
 func RemoveIndex(s []string, index int) []string {
 	return append(s[:index], s[index+1:]...)
 }
+
+// IsInArray checks if the needle in part of haystack
+func IsInArray(needle string, haystack []string) bool {
+	for _, elem :=range haystack{
+		if elem == needle {
+			return true
+		}
+	}
+	return false
+}

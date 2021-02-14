@@ -19,12 +19,18 @@ package config
 
 import (
 	"errors"
+	"fmt"
+	"github.com/w6d-io/ci-status/internal/util"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"net/url"
 	"time"
 
 	ctrl "sigs.k8s.io/controller-runtime"
+)
+
+var (
+	WHSupport = []string{"kafka", "http", "https"}
 )
 
 func New(filename string) error {
@@ -43,13 +49,16 @@ func New(filename string) error {
 	}
 	for i, wh := range config.Webhooks {
 		if wh.URLRaw != "" {
-			config.Webhooks[i].url, err = url.Parse(wh.URLRaw)
+			config.Webhooks[i].URL, err = url.Parse(wh.URLRaw)
 			if err != nil {
 				log.Error(err, "url "+wh.URLRaw+" parse failed")
 				return err
 			}
-			if config.Webhooks[i].url.Scheme == "kafka" {
-				values := config.Webhooks[i].url.Query()
+			if ! util.IsInArray(config.Webhooks[i].URL.Scheme, WHSupport) {
+				return fmt.Errorf("sheme %v not supported", config.Webhooks[i].URL.Scheme)
+			}
+			if config.Webhooks[i].URL.Scheme == "kafka" {
+				values := config.Webhooks[i].URL.Query()
 				if _, ok := values["topic"]; !ok {
 					log.Error(errors.New("missing topic"), wh.URLRaw)
 					return errors.New("missing topic")
@@ -76,9 +85,14 @@ func GetListen() string {
 	return config.Listen
 }
 
+// SetListen return the listening address for api
+func SetListen(address string) {
+	config.Listen = address
+}
+
 // GetTimeout return the timeout set in config
-func GetTimeout() int64 {
-	return config.Timeout
+func GetTimeout() time.Duration {
+	return time.Duration(config.Timeout) * time.Minute
 }
 
 // SetTimeout record the timeout in config
@@ -95,4 +109,9 @@ func SetAuth(auth []Auth) {
 // GetAuth return the auth list from config
 func GetAuth() []Auth {
 	return config.Auth
+}
+
+// GetWebhook returns the list of webhook
+func GetWebhooks() []Webhook {
+	return config.Webhooks
 }

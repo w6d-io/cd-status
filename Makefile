@@ -1,7 +1,3 @@
-
-# Image URL to use all building/pushing image targets
-IMG ?= w6dio/ci-status:latest
-
 # Get the currently used golang install path (in GOPATH/bin, unless GOBIN is set)
 ifeq (,$(shell go env GOBIN))
 GOBIN=$(shell go env GOPATH)/bin
@@ -13,15 +9,16 @@ all: ci-status
 
 # Run tests
 test: fmt vet
-	go test ./... -coverprofile cover.out
+	go test -v -coverpkg=./... -coverprofile=cover.out ./...
+	@go tool cover -func cover.out | grep total
 
 # Build ci-status binary
 ci-status: fmt vet
-	go build -o bin/ci-status main.go
+	go build -o bin/ci-status cmd/ci-status/main.go
 
 # Run against the configured Kubernetes cluster in ~/.kube/config
 run: fmt vet
-	go run ./main.go -config config/tests/config.yaml -log-level 2
+	go run cmd/ci-status/main.go -config config/tests/config.yaml -log-level 2
 
 # Run go fmt against code
 fmt:
@@ -39,19 +36,3 @@ build: test
 push:
 	docker push ${IMG}
 
-# find or download controller-gen
-# download controller-gen if necessary
-controller-gen:
-ifeq (, $(shell which controller-gen))
-	@{ \
-	set -e ;\
-	CONTROLLER_GEN_TMP_DIR=$$(mktemp -d) ;\
-	cd $$CONTROLLER_GEN_TMP_DIR ;\
-	go mod init tmp ;\
-	go get sigs.k8s.io/controller-tools/cmd/controller-gen@v0.2.5 ;\
-	rm -rf $$CONTROLLER_GEN_TMP_DIR ;\
-	}
-CONTROLLER_GEN=$(GOBIN)/controller-gen
-else
-CONTROLLER_GEN=$(shell which controller-gen)
-endif

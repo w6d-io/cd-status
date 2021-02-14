@@ -14,10 +14,15 @@ See the License for the specific language governing permissions and
 limitations under the License.
 Created on 24/01/2021
 */
-package watch
+package play
 
 import (
 	"errors"
+	"github.com/go-logr/logr"
+	"github.com/w6d-io/ci-status/internal/config"
+	"github.com/w6d-io/ci-status/pkg/handler/watch/play/pipelinerun"
+	"github.com/w6d-io/ci-status/pkg/router"
+	"k8s.io/apimachinery/pkg/types"
 	"net/http"
 
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -29,17 +34,17 @@ var (
 	logger = ctrl.Log.WithName("watch")
 )
 
+func init() {
+	router.AddPOST("/watch/play", Play)
+	AddWatcher(pipelinerun.KIND, pipelinerun.Scan)
+}
+
 // Play gets the play payload and determine the resource to scan
 func Play(c *gin.Context) {
 	log := logger.WithName("Play")
-	var (
-		payload Payload
-		scan    func(Payload) error
-		ok      bool
-	)
 	if err := c.BindJSON(&payload); err != nil {
 		log.Error(err, "BindJSON")
-		c.JSON(http.StatusBadRequest, gin.H{"status": "error", "message": err.Error()})
+		c.JSON(400, gin.H{"status": "error", "message": err.Error()})
 		return
 	}
 	log = log.WithValues("kind", payload.Object.Kind)
@@ -48,13 +53,19 @@ func Play(c *gin.Context) {
 		c.JSON(http.StatusNotImplemented, gin.H{"status": "error", "message": payload.Object.Kind + " does not supported"})
 		return
 	}
-	if err := scan(payload); err != nil {
-		log.Error(err, "Scan resource")
-		return
-	}
+	go func(kind string, nn types.NamespacedName, projectID, pipelineID int64) {
+		corId := c.Writer.Header().Get(config.CorrelationId)
+		scanLog := ctrl.Log.WithValues("correlation_id", corId, "kind", kind)
+		err := scan(scanLog, nn, projectID, pipelineID)
+		if err != nil {
+			scanLog.Error(err, "Scan resource")
+			return
+		}
+	}(payload.Object.Kind, payload.Object.NamespacedName, payload.ProjectID, payload.PipelineID)
+	c.JSON(200, gin.H{"status": "ok", "message": "scan launched"})
 }
 
 // AddWatcher inserts method to scans map
-func AddWatcher(name string, w func(payload Payload) error) {
-	scans[name] = w
+func AddWatcher(name string, f func(logr.Logger, types.NamespacedName, int64, int64) error) {
+	scans[name] = f
 }

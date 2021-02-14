@@ -18,22 +18,22 @@ Created on 23/01/2021
 package router
 
 import (
+	"net/http"
+	"os"
+	"os/signal"
+
 	"github.com/gin-gonic/gin"
 	"github.com/w6d-io/ci-status/internal/config"
-	"github.com/w6d-io/ci-status/pkg/watch"
 )
 
-// New initializes the engine instance
-func New() error {
-	engine = gin.New()
+func init() {
 	engine.Use(LogMiddleware())
 	engine.Use(gin.Recovery())
 	engine.Use(CorrelationID())
 	if config.IsAuth() {
 		engine.Use(Auth())
 	}
-	AddPOST("/watch/play", watch.Play)
-	return nil
+
 }
 
 // AddPOST adds handler and path to the engine
@@ -43,5 +43,37 @@ func AddPOST(relativePath string, handlers ...gin.HandlerFunc) {
 
 // Run execute le gin router
 func Run() error {
-	return engine.Run(config.GetListen())
+
+	server.Addr = config.GetListen()
+	server.Handler = engine
+
+	quit := make(chan os.Signal)
+	signal.Notify(quit, os.Interrupt)
+	signal.Notify(quit, os.Kill)
+	go func() {
+		<-quit
+		logger.Info("receive interrupt or kill signal")
+		if err := server.Close(); err != nil {
+			logger.Error(err, "Server closed")
+			os.Exit(1)
+		}
+	}()
+	logger.WithValues("address", config.GetListen()).Info("Listening and serving HTTP")
+	if err := server.ListenAndServe(); err != nil {
+		if err == http.ErrServerClosed {
+			logger.Info("Server closed under request")
+			return nil
+		}
+		logger.Error(err, "Server closed unexpect")
+		return err
+	}
+	return nil
+}
+
+// Stop the http server
+func Stop() error {
+	if server != nil {
+		return server.Close()
+	}
+	return nil
 }

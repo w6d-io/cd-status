@@ -43,9 +43,9 @@ type Auth struct {
 }
 
 type Webhook struct {
-	Type   string `json:"type" yaml:"type"`
-	URLRaw string `json:"url"  yaml:"url"`
-	url    *url.URL
+	Type   string   `json:"type" yaml:"type"`
+	URLRaw string   `json:"url"  yaml:"url"`
+	URL    *url.URL `json:"-"    yaml:"-"`
 }
 
 var config = new(Config)
@@ -54,3 +54,7 @@ var config = new(Config)
 func IsAuth() bool {
 	return len(config.Auth) > 0
 }
+
+const (
+	CorrelationId string = "Correlation-ID"
+)

@@ -17,42 +17,32 @@ Created on 24/01/2021
 package pipelinerun
 
 import (
+	"github.com/go-logr/logr"
 	"github.com/w6d-io/ci-status/internal/tekton"
-	"github.com/w6d-io/ci-status/pkg/watch"
 	"k8s.io/apimachinery/pkg/types"
-	ctrl "sigs.k8s.io/controller-runtime"
-)
-
-type PipelineRun struct {
-}
-
-var (
-	pipelineRun watch.Interface
-	logger      = ctrl.Log.WithName("api").WithName("watch").WithName("pipelinerun")
 )
 
 const KIND = "pipelinerun"
 
-func init() {
-	pipelineRun = new(PipelineRun)
-	watch.AddWatcher(KIND, pipelineRun.Scan)
-}
-
-func (p PipelineRun) Scan(payload watch.Payload) error {
+// Scan stars the scan of pipeline run tekton resource
+func Scan(logger logr.Logger, nn types.NamespacedName, projectID int64, pipelineID int64) error {
 	log := logger.WithName("Scan").
-		WithValues("kind", payload.Object.Kind).
-		WithValues("name", payload.Object.NamespacedName)
+		WithValues("kind", "pipelinerun").
+		WithValues("name", nn)
 	log.V(1).Info("start")
-	nn := payload.Object.NamespacedName
+	defer log.V(1).Info("stop")
 	t := tekton.Tekton{
-		ProjectID:  payload.ProjectID,
-		PipelineID: payload.PipelineID,
-		Namespaced: types.NamespacedName{
-			Name:      nn.Name,
-			Namespace: nn.Namespace,
+		ProjectID:  projectID,
+		PipelineID: pipelineID,
+		Log:        logger,
+		PipelineRun: tekton.PipelineRunPayload{
+			NamespacedName: types.NamespacedName{
+				Name:      nn.Name,
+				Namespace: nn.Namespace,
+			},
 		},
 	}
-	if err := t.Supervise(); err != nil {
+	if err := t.PipelineRunSupervise(); err != nil {
 		return err
 	}
 	return nil

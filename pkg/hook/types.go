@@ -12,22 +12,16 @@ distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
-Created on 23/01/2021
+Created on 07/02/2021
 */
+package hook
 
-package router
+import "net/url"
 
-import (
-	"net/http"
+type Hook struct {}
 
-	ctrl "sigs.k8s.io/controller-runtime"
-
-	"github.com/gin-gonic/gin"
-)
-
-// engine is the gin Engine instance in router package
 var (
-	server = &http.Server{}
-	engine = gin.New()
-	logger = ctrl.Log.WithName("Router")
+	subscriber   = make(map[string]func(interface{}, *url.URL) error)
+	subscription func(interface{}, *url.URL) error
 )
+

@@ -19,25 +19,32 @@ package tekton
 import (
 	"context"
 	"fmt"
+	"github.com/w6d-io/ci-status/pkg/hook"
+	"knative.dev/pkg/apis/duck/v1beta1"
 	"sync"
 	"time"
 
 	tkn "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
 
+	"github.com/go-logr/logr"
 	"github.com/w6d-io/ci-status/internal/config"
 )
 
-// Supervise watches all pod event created by pipelinerun
-func (t *Tekton) Supervise() error {
-	log := logger.WithName("Supervise").WithValues("object", t.Namespaced.String())
-	prw := t.GetWatch("pipelinerun")
-	if prw == nil {
-		return fmt.Errorf("pipelinerun %s not found", t.Namespaced.String())
+// PipelineRunSupervise watches all pod event created by pipelinerun
+func (t *Tekton) PipelineRunSupervise() error {
+	log := t.Log.WithName("PipelineRunSupervise").WithValues("object", t.PipelineRun.NamespacedName.String())
+	w := t.GetWatch("pipelinerun")
+	if w == nil {
+		return fmt.Errorf("pipelinerun %s not found", t.PipelineRun.NamespacedName.String())
 	}
-	timeout := time.NewTimer(time.Duration(config.GetTimeout()))
+	timeout := time.NewTimer(config.GetTimeout())
+	log.WithValues("timeout", config.GetTimeout()).V(1).Info("timeout set")
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	defer prw.Stop()
+	defer func() {
+		log.Info("stop watcher")
+		w.Stop()
+	}()
 	for {
 		select {
 		case <-timeout.C:
@@ -46,23 +53,31 @@ func (t *Tekton) Supervise() error {
 		case <-ctx.Done():
 			log.Info("context Done")
 			return nil
-		case prc := <-prw.ResultChan():
-			if prc.Object == nil {
+		case e := <-w.ResultChan():
+			if e.Object == nil {
 				log.Info("timeout")
-				// TODO notify
+				t.PipelineRun.Status = "timeout"
+				if err := hook.Send(t.PipelineRun, log); err != nil {
+					log.Error(err, "hook failed")
+					return err
+				}
 				return nil
 			}
-			t.SupTasks(prc.Object.(*tkn.PipelineRun))
+			t.SupTasks(e.Object.(*tkn.PipelineRun))
+			return nil
 		}
 	}
 }
 
 // SupTask loops task watch
 func (t *Tekton) SupTasks(pr *tkn.PipelineRun) {
-	log := logger.WithName("SupTasks").WithValues("object", t.Namespaced.String())
-	var wg sync.WaitGroup
-	// TODO Notify
+	log := t.Log.WithName("SupTasks").WithValues("object", t.PipelineRun.NamespacedName.String())
+	t.PipelineRun.SetCondition(pr.Status.Conditions)
+	if err := hook.Send(t.PipelineRun, log); err != nil {
+		log.Error(err, "hook failed")
+	}
 	currentTask := make(map[string]bool)
+	var wg sync.WaitGroup
 	for _, task := range t.GetTask(pr) {
 		if currentTask[task.Name] {
 			continue
@@ -70,11 +85,27 @@ func (t *Tekton) SupTasks(pr *tkn.PipelineRun) {
 		rlog := log.V(1).WithValues("name", task.Name)
 		rlog.Info("work")
 		currentTask[task.Name] = true
+		rlog.V(1).Info("Add wait")
+		wg.Add(1)
 		go func(wg *sync.WaitGroup, name string) {
-			rlog.V(1).Info("Add waite")
-			wg.Add(1)
-
-			wg.Done()
+			defer delete(currentTask, name)
+			defer removeWait(log, wg)
+			if err := t.TaskRunSupervise(); err != nil {
+				log.Error(err, "taskrun supervising")
+				return
+			}
 		}(&wg, task.Name)
 	}
+	wg.Wait()
+}
+
+func removeWait(logger logr.Logger, wg *sync.WaitGroup) {
+	logger.V(1).Info("remove wait")
+	wg.Done()
+}
+
+func (p *PipelineRunPayload) SetCondition(c v1beta1.Conditions) {
+	condition, reason := GetStatusReason(c)
+	p.Status = condition
+	p.Message = reason
 }

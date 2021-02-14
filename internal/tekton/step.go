@@ -12,22 +12,12 @@ distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
-Created on 23/01/2021
+Created on 06/02/2021
 */
+package tekton
 
-package router
+import tkn "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
 
-import (
-	"net/http"
+func (t *Tekton) StepSupervise(run *tkn.TaskRun) {
 
-	ctrl "sigs.k8s.io/controller-runtime"
-
-	"github.com/gin-gonic/gin"
-)
-
-// engine is the gin Engine instance in router package
-var (
-	server = &http.Server{}
-	engine = gin.New()
-	logger = ctrl.Log.WithName("Router")
-)
+}

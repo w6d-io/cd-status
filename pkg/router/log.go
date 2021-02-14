@@ -19,6 +19,7 @@ package router
 
 import (
 	"errors"
+	"github.com/w6d-io/ci-status/internal/config"
 	"net/http"
 	"strings"
 	"time"
@@ -42,12 +43,12 @@ func LogMiddleware() gin.HandlerFunc {
 		// Stop timer
 		duration := GetDurationInMilliseconds(start)
 		var (
-			status int = http.StatusNotImplemented
+			status = http.StatusNotImplemented
 			corID  string
 		)
 		if c.Writer != nil {
 			status = c.Writer.Status()
-			corID = c.Writer.Header().Get(CorrelationId)
+			corID = c.Writer.Header().Get(config.CorrelationId)
 		}
 
 		entry := log.WithValues(
@@ -104,9 +105,9 @@ func CorrelationID() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var correlationID string
 		if c.Writer != nil {
-			correlationID = c.Writer.Header().Get(CorrelationId)
+			correlationID = c.Writer.Header().Get(config.CorrelationId)
 			if correlationID == "" {
-				c.Header(CorrelationId, uuid.New().String())
+				c.Header(config.CorrelationId, uuid.New().String())
 			}
 		}
 	}

@@ -14,17 +14,15 @@ See the License for the specific language governing permissions and
 limitations under the License.
 Created on 24/01/2021
 */
-package watch
+package play
 
-import "k8s.io/apimachinery/pkg/types"
+import (
+	"github.com/go-logr/logr"
+	"k8s.io/apimachinery/pkg/types"
+)
 
-type Interface interface {
-	Scan(Payload) error
-}
-
-//type Scan func() error
-
-var scans = make(map[string]func(Payload) error)
+//ScanFct func() error
+//type ScanFct func(Payload, logr.Logger) error
 
 type Payload struct {
 	Object     Object `json:"object,omitempty"`
@@ -61,3 +59,10 @@ type Stack struct {
 	// Package contains the package use in application
 	Package string `json:"package,omitempty"`
 }
+
+var (
+	scans   = make(map[string]func(logr.Logger, types.NamespacedName, int64, int64) error)
+	scan    func(logr.Logger, types.NamespacedName, int64, int64) error
+	payload Payload
+	ok      bool
+)

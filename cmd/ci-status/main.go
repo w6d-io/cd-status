@@ -21,22 +21,18 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"github.com/w6d-io/ci-status/pkg/handler"
 	"os"
 
-	tkn "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
-	resourcev1alpha1 "github.com/tektoncd/pipeline/pkg/apis/resource/v1alpha1"
-	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	ctrl "sigs.k8s.io/controller-runtime"
 
 	"github.com/w6d-io/ci-status/internal/util"
 	"github.com/w6d-io/ci-status/pkg/router"
 	"go.uber.org/zap/zapcore"
-	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 )
 
 var (
-	scheme   = runtime.NewScheme()
 	setupLog = ctrl.Log.WithName("setup")
 
 	// Version microservice version
@@ -53,15 +49,10 @@ var (
 
 	// OsArch ...
 	OsArch = ""
+
+	_ = handler.Handler{}
 )
 
-func init() {
-	_ = clientgoscheme.AddToScheme(scheme)
-	_ = tkn.AddToScheme(scheme)
-	_ = resourcev1alpha1.AddToScheme(scheme)
-}
-
-//
 func main() {
 
 	setupLog.Info("managed flag")
@@ -84,7 +75,7 @@ func main() {
 
 	setupLog.Info("starting ci-status", "Version", Version, "Built",
 		Built, "Revision", Revision, "Arch", OsArch, "GoVersion", GoVersion)
-	if err := router.New(); err != nil {
-		setupLog.Info("router init")
+	if err := router.Run(); err != nil {
+		setupLog.Error(err, "run server")
 	}
 }

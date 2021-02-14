@@ -1,4 +1,4 @@
-package watch_test
+package play_test
 
 import (
 	"testing"

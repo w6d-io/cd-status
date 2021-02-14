@@ -1,13 +1,15 @@
-package watch_test
+package play_test
 
 import (
+	"github.com/go-logr/logr"
+	"github.com/w6d-io/ci-status/pkg/handler/watch/play"
 	"io/ioutil"
+	"k8s.io/apimachinery/pkg/types"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 
 	"github.com/gin-gonic/gin"
-	"github.com/w6d-io/ci-status/pkg/watch"
 	"k8s.io/apimachinery/pkg/util/framer"
 
 	. "github.com/onsi/ginkgo"
@@ -29,7 +31,10 @@ var _ = Describe("Watch", func() {
 {
   "object": {
     "kind": "pipelinerun",
-    "name": "pipeline-run-1-1"
+    namespaced_name: {
+      "name": "pipeline-run-1-1",
+      "namespace": "default"
+    }
   },
   "project_id": 1,
   "pipeline_id": 1,
@@ -38,7 +43,8 @@ var _ = Describe("Watch", func() {
 `
 				})
 				It("add watcher", func() {
-					watch.AddWatcher("test", func(p watch.Payload) error { return nil })
+					f := func(_ logr.Logger, _ types.NamespacedName, _ int64, _ int64) error { return nil }
+					play.AddWatcher("test", f)
 				})
 				It("watch for pipelinerun", func() {
 					r := ioutil.NopCloser(strings.NewReader(payload))
@@ -48,7 +54,7 @@ var _ = Describe("Watch", func() {
 					c.Request = &http.Request{
 						Body: framer.NewJSONFramedReader(r),
 					}
-					watch.Play(c)
+					play.Play(c)
 				})
 			})
 		})
@@ -70,7 +76,7 @@ var _ = Describe("Watch", func() {
 					c, _ := gin.CreateTestContext(w)
 					c.Request = &http.Request{
 						Body: framer.NewJSONFramedReader(r)}
-					watch.Play(c)
+					play.Play(c)
 				})
 				It("payload object kind is not supported", func() {
 					payload := `
@@ -89,7 +95,7 @@ var _ = Describe("Watch", func() {
 					c, _ := gin.CreateTestContext(w)
 					c.Request = &http.Request{
 						Body: framer.NewJSONFramedReader(r)}
-					watch.Play(c)
+					play.Play(c)
 				})
 				It("Scan return an error", func() {
 					payload := `
@@ -108,7 +114,7 @@ var _ = Describe("Watch", func() {
 					c, _ := gin.CreateTestContext(w)
 					c.Request = &http.Request{
 						Body: framer.NewJSONFramedReader(r)}
-					watch.Play(c)
+					play.Play(c)
 				})
 			})
 		})
