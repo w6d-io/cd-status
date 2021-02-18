@@ -40,7 +40,7 @@ var _ = Describe("Tekton", func() {
 						},
 					},
 				}
-				Expect(t.GetWatch("pods")).ToNot(BeNil())
+				Expect(t.GetWatch("pods", "test")).ToNot(BeNil())
 			})
 		})
 	})
@@ -67,7 +67,7 @@ var _ = Describe("Tekton", func() {
 						},
 					},
 				}
-				Expect(t.GetTask(pr)).To(BeNil())
+				Expect(t.PipelineRun.GetTasks(pr)).To(BeNil())
 			})
 		})
 	})

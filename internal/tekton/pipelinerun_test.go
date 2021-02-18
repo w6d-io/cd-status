@@ -29,7 +29,8 @@ var _ = Describe("Tekton", func() {
 	Context("PipelineRunSupervise", func() {
 		When("timeout is reached", func() {
 			It("get out the loop", func() {
-				config.SetTimeout(0)
+				err := config.SetTimeout(0)
+				Expect(err).To(Succeed())
 				t := &tekton.Tekton{
 					PipelineRun: tekton.PipelineRunPayload{
 						NamespacedName: types.NamespacedName{
@@ -53,7 +54,7 @@ var _ = Describe("Tekton", func() {
 						},
 					},
 				}
-				Expect(t.GetWatch("pods")).ToNot(BeNil())
+				Expect(t.GetWatch("pods", "test")).ToNot(BeNil())
 			})
 			It("returns not nil for pipelineruns", func() {
 				t := &tekton.Tekton{
@@ -64,7 +65,7 @@ var _ = Describe("Tekton", func() {
 						},
 					},
 				}
-				Expect(t.GetWatch("pipelineruns")).ToNot(BeNil())
+				Expect(t.GetWatch("pipelineruns", "test")).ToNot(BeNil())
 			})
 			It("returns not nil for taskruns", func() {
 				t := &tekton.Tekton{
@@ -75,7 +76,7 @@ var _ = Describe("Tekton", func() {
 						},
 					},
 				}
-				Expect(t.GetWatch("taskruns")).ToNot(BeNil())
+				Expect(t.GetWatch("taskruns", "test")).ToNot(BeNil())
 			})
 			It("returns nil for not supported kind", func() {
 				t := &tekton.Tekton{
@@ -86,7 +87,7 @@ var _ = Describe("Tekton", func() {
 						},
 					},
 				}
-				Expect(t.GetWatch("not-supported")).To(BeNil())
+				Expect(t.GetWatch("not-supported", "test")).To(BeNil())
 			})
 		})
 	})

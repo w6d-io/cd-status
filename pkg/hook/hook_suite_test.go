@@ -27,4 +27,3 @@ func TestHook(t *testing.T) {
 	RegisterFailHandler(Fail)
 	RunSpecs(t, "Hook Suite")
 }
-

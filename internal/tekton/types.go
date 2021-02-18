@@ -39,12 +39,13 @@ type TaskRunPayload struct {
 type Tasks []Task
 
 type Task struct {
-	Name      string `json:"name"`
-	Status    string `json:"status"`
-	StartTime string `json:"start_time"`
-	Duration  string `json:"duration"`
-	Message   string `json:"message"`
-	Steps     []Step `json:"steps"`
+	TaskRunName string `json:"-"`
+	Name        string `json:"name"`
+	Status      string `json:"status"`
+	StartTime   string `json:"start_time"`
+	Duration    string `json:"duration"`
+	Message     string `json:"message"`
+	Steps       []Step `json:"steps"`
 
 	CompletionTimeRaw *metav1.Time `json:"completion_time_raw"`
 	StartTimeRaw      *metav1.Time `json:"start_time_raw"`
@@ -66,7 +67,6 @@ type PipelineRunPayload struct {
 	Message        string               `json:"message"`
 	TaskRuns       []TaskRunPayload     `json:"task_runs"`
 }
-
 
 // Reason ...
 var Reason = map[string]string{

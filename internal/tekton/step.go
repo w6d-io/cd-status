@@ -18,6 +18,37 @@ package tekton
 
 import tkn "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
 
-func (t *Tekton) StepSupervise(run *tkn.TaskRun) {
+const (
+	pendingState = "---"
+)
 
+func GetSteps(status tkn.TaskRunStatus) (steps []Step) {
+	log := logger.WithName("GetSteps")
+	if (len(status.Steps) != 0 && status.Steps[0].Waiting == nil) &&
+		(status.Steps[0].Terminated != nil || status.Steps[0].Running != nil) {
+		log.V(2).Info("setting")
+		for _, step := range status.Steps {
+			log.V(2).Info("append", "name", step.Name, "status", StepReasonExists(step))
+			steps = append(steps, Step{
+				Name:   step.Name,
+				Status: StepReasonExists(step),
+			})
+		}
+	}
+	return
+}
+
+// StepReasonExists ...
+func StepReasonExists(state tkn.StepState) string {
+	logger.V(1).Info("StepReasonExists")
+	if state.Waiting == nil {
+		if state.Running != nil {
+			return "Running"
+		}
+		if state.Terminated != nil {
+			return state.Terminated.Reason
+		}
+		return pendingState
+	}
+	return state.Waiting.Reason
 }

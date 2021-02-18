@@ -20,7 +20,6 @@ package config
 import (
 	"errors"
 	"fmt"
-	"github.com/w6d-io/ci-status/internal/util"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"net/url"
@@ -54,7 +53,7 @@ func New(filename string) error {
 				log.Error(err, "url "+wh.URLRaw+" parse failed")
 				return err
 			}
-			if ! util.IsInArray(config.Webhooks[i].URL.Scheme, WHSupport) {
+			if !IsInArray(config.Webhooks[i].URL.Scheme, WHSupport) {
 				return fmt.Errorf("sheme %v not supported", config.Webhooks[i].URL.Scheme)
 			}
 			if config.Webhooks[i].URL.Scheme == "kafka" {
@@ -114,4 +113,14 @@ func GetAuth() []Auth {
 // GetWebhook returns the list of webhook
 func GetWebhooks() []Webhook {
 	return config.Webhooks
+}
+
+// IsInArray checks if the needle in part of haystack
+func IsInArray(needle string, haystack []string) bool {
+	for _, elem := range haystack {
+		if elem == needle {
+			return true
+		}
+	}
+	return false
 }

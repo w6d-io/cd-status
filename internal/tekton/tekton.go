@@ -20,23 +20,20 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"sort"
 	"strings"
 
-	tkn "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
 	corev1 "k8s.io/api/core/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"github.com/jonboulle/clockwork"
 	"github.com/tektoncd/cli/pkg/cli"
-	"github.com/tektoncd/cli/pkg/formatted"
 	"github.com/w6d-io/ci-status/internal/config"
 	"k8s.io/apimachinery/pkg/watch"
 	"knative.dev/pkg/apis/duck/v1beta1"
 )
 
 // GetWatch gets the watch interface for pipelineruns, taskruns and pods
-func (t *Tekton) GetWatch(kind string) (w watch.Interface) {
+func (t *Tekton) GetWatch(kind string, name string) (w watch.Interface) {
 	log := logger.WithName("GetWatch").WithValues("object", t.PipelineRun.NamespacedName.String(), "kind", kind)
 	namespace := t.PipelineRun.NamespacedName.Namespace
 	tknParam := cli.TektonParams{}
@@ -48,15 +45,30 @@ func (t *Tekton) GetWatch(kind string) (w watch.Interface) {
 	}
 	timeout := int64(config.GetTimeout().Seconds())
 	opts := metav1.ListOptions{
-		FieldSelector:  fmt.Sprintf("metadata.name=%s", t.PipelineRun.NamespacedName.Name),
+		FieldSelector:  fmt.Sprintf("metadata.name=%s", name),
 		TimeoutSeconds: &timeout,
 	}
 	switch kind {
 	case "pipelinerun", "pipelineruns":
+		log.V(2).Info("get pipelinerun", "name", name)
+		_, err = cs.Tekton.TektonV1beta1().PipelineRuns(namespace).Get(context.TODO(), name, metav1.GetOptions{})
+		if apierrors.IsNotFound(err) {
+			return nil
+		}
 		w, err = cs.Tekton.TektonV1beta1().PipelineRuns(namespace).Watch(context.TODO(), opts)
 	case "taskrun", "taskruns":
+		log.V(2).Info("get taskrun", "name", name)
+		_, err := cs.Tekton.TektonV1beta1().TaskRuns(namespace).Get(context.TODO(), name, metav1.GetOptions{})
+		if apierrors.IsNotFound(err) {
+			return nil
+		}
 		w, err = cs.Tekton.TektonV1beta1().TaskRuns(namespace).Watch(context.TODO(), opts)
 	case "po", "pod", "pods":
+		log.V(2).Info("get pod", "name", name)
+		_, err = cs.Kube.CoreV1().Pods(namespace).Get(context.TODO(), name, metav1.GetOptions{})
+		if apierrors.IsNotFound(err) {
+			return nil
+		}
 		w, err = cs.Kube.CoreV1().Pods(namespace).Watch(context.TODO(), opts)
 	default:
 		log.Error(errors.New("kind not supported"), "")
@@ -67,28 +79,6 @@ func (t *Tekton) GetWatch(kind string) (w watch.Interface) {
 		return nil
 	}
 	return
-}
-
-func (t *Tekton) GetTask(pr *tkn.PipelineRun) (ts Tasks) {
-	log := logger.WithName("GetTask").WithValues("object", t.PipelineRun.NamespacedName.String())
-	if len(pr.Status.TaskRuns) > 0 {
-		for _, taskrunStatus := range pr.Status.TaskRuns {
-			task := Task{
-				Name: taskrunStatus.PipelineTaskName,
-				StartTime: formatted.Age(taskrunStatus.Status.StartTime,
-					clockwork.NewRealClock()),
-				Duration: formatted.Duration(taskrunStatus.Status.StartTime,
-					taskrunStatus.Status.CompletionTime),
-				Status:            formatted.Condition(taskrunStatus.Status.Conditions),
-				StartTimeRaw:      taskrunStatus.Status.StartTime,
-				CompletionTimeRaw: taskrunStatus.Status.CompletionTime,
-			}
-			ts = append(ts, task)
-		}
-		sort.Sort(ts)
-		log.V(1).WithValues("elements", len(ts)).Info("tasks")
-	}
-	return ts
 }
 
 // Len is a method for Sort
@@ -145,4 +135,56 @@ func GetStatusReason(c v1beta1.Conditions) (status string, reason string) {
 		status = cStatus
 	}
 	return
+}
+
+// Condition returns a human readable text based on the status of the Condition
+func Condition(c v1beta1.Conditions) (status string, reason string) {
+	if len(c) == 0 {
+		return "---", ""
+	}
+
+	switch c[0].Status {
+	case corev1.ConditionFalse:
+		status = "Failed"
+	case corev1.ConditionTrue:
+		status = "Succeeded"
+	case corev1.ConditionUnknown:
+		status = "Running"
+	}
+	cstatus := status
+
+	if c[0].Reason != "" && c[0].Reason != status {
+
+		if c[0].Reason == "PipelineRunCancelled" || c[0].Reason == "TaskRunCancelled" {
+			reason = Reason["default"]
+			if _, ok := Reason[strings.ToLower(c[0].Reason)]; ok {
+				reason = Reason[strings.ToLower(c[0].Reason)]
+			}
+			status = "Cancelled"
+		} else if c[0].Reason != status {
+			reason = Reason["default"]
+			if _, ok := Reason[strings.ToLower(c[0].Reason)]; ok {
+				reason = Reason[strings.ToLower(c[0].Reason)]
+			}
+			status = cstatus
+		}
+	} else {
+		status = cstatus
+	}
+
+	return
+}
+
+// IsTerminated returns if a pod is terminated
+func IsTerminated(c v1beta1.Conditions) bool {
+	if len(c) == 0 {
+		return false
+	}
+	switch c[0].Status {
+	case corev1.ConditionFalse, corev1.ConditionTrue:
+		return true
+	case corev1.ConditionUnknown:
+		return false
+	}
+	return false
 }

@@ -18,10 +18,9 @@ package hook
 
 import "net/url"
 
-type Hook struct {}
+type Hook struct{}
 
 var (
-	subscriber   = make(map[string]func(interface{}, *url.URL) error)
-	subscription func(interface{}, *url.URL) error
+	subscriber = make(map[string]func(interface{}, *url.URL) error)
+	//subscription func(interface{}, *url.URL) error
 )
-

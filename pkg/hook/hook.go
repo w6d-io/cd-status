@@ -17,26 +17,64 @@ Created on 07/02/2021
 package hook
 
 import (
-	"errors"
+	"fmt"
 	"github.com/go-logr/logr"
 	"github.com/w6d-io/ci-status/internal/config"
+	"github.com/w6d-io/ci-status/pkg/hook/kafka"
 	"net/url"
 )
 
-// Send loop into all the webhooks url. for each it get the function by the scheme and run the method/function associated
+func init() {
+	Subscribe("kafka", kafka.Send)
+}
+
 func Send(payload interface{}, logger logr.Logger) error {
-	for _, wh := range config.GetWebhooks() {
-		if wh.URL != nil {
-			log := logger.WithValues("scheme", wh.URL.Scheme)
-			f, ok := subscriber[wh.URL.Scheme]
+	logger.V(2).Info("to send", "payload", payload)
+	go func(payload interface{}, logger logr.Logger) {
+		if err := DoSend(payload, logger); err != nil {
+			logger.Error(err, "DoSend")
+			return
+		}
+	}(payload, logger)
+	return nil
+}
+
+// Send loop into all the webhooks url. for each it get the function by the scheme and run the method/function associated
+func DoSend(payload interface{}, logger logr.Logger) error {
+	log := logger.WithName("HookSend")
+	whs := config.GetWebhooks()
+	errc := make(chan error, len(whs))
+	quit := make(chan struct{})
+	defer close(quit)
+
+	for _, wh := range whs {
+		if wh.URL == nil {
+			continue
+		}
+		log := log.WithValues("scheme", wh.URL.Scheme)
+		go func(payload interface{}, URL *url.URL) {
+			f, ok := subscriber[URL.Scheme]
 			if !ok {
-				log.Error(errors.New("scheme not supported"), "payload not sent")
+				err := fmt.Errorf("scheme %v not supported", URL.Scheme)
+				log.Error(err, "payload not sent")
+				return
 			}
-			if err := f(payload, wh.URL); err != nil {
-				log.Error(err, "exec function failed")
+			logg := log.WithValues("url", URL)
+			select {
+			case errc <- f(payload, URL):
+				logg.Info("sent")
+			case <-quit:
+				logg.Info("quit")
 			}
+		}(payload, wh.URL)
+	}
+	for range whs {
+		if err := <-errc; err != nil {
+			log.Error(err, "Sent failed")
+			return err
 		}
 	}
+
 	return nil
 }
 
@@ -44,4 +82,3 @@ func Send(payload interface{}, logger logr.Logger) error {
 func Subscribe(name string, f func(interface{}, *url.URL) error) {
 	subscriber[name] = f
 }
-

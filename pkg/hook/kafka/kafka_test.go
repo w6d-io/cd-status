@@ -16,7 +16,6 @@ Created on 08/02/2021
 */
 package kafka_test
 
-
 import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -29,4 +28,3 @@ var _ = Describe("Kafka", func() {
 		})
 	})
 })
-

@@ -22,6 +22,7 @@ import (
 	"flag"
 	"fmt"
 	"github.com/w6d-io/ci-status/pkg/handler"
+	"github.com/w6d-io/ci-status/pkg/hook"
 	"os"
 
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -51,6 +52,7 @@ var (
 	OsArch = ""
 
 	_ = handler.Handler{}
+	_ = hook.Hook{}
 )
 
 func main() {

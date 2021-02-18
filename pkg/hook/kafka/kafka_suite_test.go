@@ -16,7 +16,6 @@ Created on 08/02/2021
 */
 package kafka_test
 
-
 import (
 	"testing"
 
@@ -28,5 +27,3 @@ func TestHook(t *testing.T) {
 	RegisterFailHandler(Fail)
 	RunSpecs(t, "Kafka Suite")
 }
-
-
