@@ -5,7 +5,7 @@ else
 GOBIN=$(shell go env GOBIN)
 endif
 
-VERSION=$(shell git symbolic-ref --quiet HEAD 2> /dev/null | awk -F / '{ print $3}')
+VERSION=$(shell git symbolic-ref --quiet HEAD 2> /dev/null | awk -F '/' '{ print $3 }')
 VCS_REF=$(shell git rev-parse HEAD)
 GOVERSION=$(shell go version | awk '{ print $3 }' | sed 's/go//')
 BUILD_DATE=$(shell date -u +"%Y-%m-%dT%H:%M:%SZ")

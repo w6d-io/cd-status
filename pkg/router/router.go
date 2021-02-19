@@ -41,6 +41,11 @@ func AddPOST(relativePath string, handlers ...gin.HandlerFunc) {
 	engine.POST(relativePath, handlers...)
 }
 
+// AddGET adds handler and path to the engine
+func AddGET(relativePath string, handlers ...gin.HandlerFunc) {
+	engine.GET(relativePath, handlers...)
+}
+
 // Run execute le gin router
 func Run() error {
 

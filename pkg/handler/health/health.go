@@ -12,18 +12,22 @@ distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
-Created on 05/02/2021
+Created on 19/02/2021
 */
-package handler
+package health
 
 import (
-	"github.com/w6d-io/ci-status/pkg/handler/health"
-	"github.com/w6d-io/ci-status/pkg/handler/watch"
+	"github.com/gin-gonic/gin"
+	"github.com/w6d-io/ci-status/pkg/router"
 )
 
+type Healthy struct{}
+
 func init() {
-	_ = watch.Watch{}
-	_ = health.Healthy{}
+	router.AddGET("/health", Health)
 }
 
-type Handler struct{}
+// Health call for liveliness and readiness
+func Health(c *gin.Context) {
+	c.JSON(200, gin.H{"status": "ok"})
+}
