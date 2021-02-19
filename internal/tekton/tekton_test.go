@@ -31,7 +31,7 @@ import (
 var _ = Describe("Tekton", func() {
 	Context("GetWatch", func() {
 		When("resource does not exist", func() {
-			It("returns not nil for pods", func() {
+			It("returns nil for pods", func() {
 				t := &tekton.Tekton{
 					PipelineRun: tekton.PipelineRunPayload{
 						NamespacedName: types.NamespacedName{
@@ -40,7 +40,7 @@ var _ = Describe("Tekton", func() {
 						},
 					},
 				}
-				Expect(t.GetWatch("pods", "test")).ToNot(BeNil())
+				Expect(t.GetWatch("pods", "test")).To(BeNil())
 			})
 		})
 	})

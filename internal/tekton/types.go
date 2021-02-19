@@ -18,6 +18,7 @@ package tekton
 
 import (
 	"github.com/go-logr/logr"
+	"github.com/tektoncd/cli/pkg/cli"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	ctrl "sigs.k8s.io/controller-runtime"
 
@@ -59,6 +60,8 @@ type Step struct {
 
 var (
 	logger = ctrl.Log.WithName("tekton")
+	tektonParams cli.TektonParams
+	cs           *cli.Clients
 )
 
 type PipelineRunPayload struct {

@@ -19,6 +19,7 @@ package tekton_test
 import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	ctrl "sigs.k8s.io/controller-runtime"
 
 	"github.com/w6d-io/ci-status/internal/config"
 	"github.com/w6d-io/ci-status/internal/tekton"
@@ -38,14 +39,17 @@ var _ = Describe("Tekton", func() {
 							Namespace: "default",
 						},
 					},
+					Log: ctrl.Log.WithName("test"),
 				}
-				Expect(t.PipelineRunSupervise()).To(BeNil())
+				err = t.PipelineRunSupervise()
+				Expect(err).NotTo(Succeed())
+				Expect(err.Error()).To(Equal("pipelinerun default/pod-test-1-1 not found"))
 			})
 		})
 	})
 	Context("GetWatch", func() {
 		When("resource does not exist", func() {
-			It("returns not nil for pods", func() {
+			It("returns nil for pods", func() {
 				t := &tekton.Tekton{
 					PipelineRun: tekton.PipelineRunPayload{
 						NamespacedName: types.NamespacedName{
@@ -54,9 +58,9 @@ var _ = Describe("Tekton", func() {
 						},
 					},
 				}
-				Expect(t.GetWatch("pods", "test")).ToNot(BeNil())
+				Expect(t.GetWatch("pods", "test")).To(BeNil())
 			})
-			It("returns not nil for pipelineruns", func() {
+			It("returns nil for pipelineruns", func() {
 				t := &tekton.Tekton{
 					PipelineRun: tekton.PipelineRunPayload{
 						NamespacedName: types.NamespacedName{
@@ -65,7 +69,7 @@ var _ = Describe("Tekton", func() {
 						},
 					},
 				}
-				Expect(t.GetWatch("pipelineruns", "test")).ToNot(BeNil())
+				Expect(t.GetWatch("pipelineruns", "test")).To(BeNil())
 			})
 			It("returns not nil for taskruns", func() {
 				t := &tekton.Tekton{
@@ -76,7 +80,7 @@ var _ = Describe("Tekton", func() {
 						},
 					},
 				}
-				Expect(t.GetWatch("taskruns", "test")).ToNot(BeNil())
+				Expect(t.GetWatch("taskruns", "test")).To(BeNil())
 			})
 			It("returns nil for not supported kind", func() {
 				t := &tekton.Tekton{

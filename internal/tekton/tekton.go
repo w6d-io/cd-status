@@ -36,13 +36,8 @@ import (
 func (t *Tekton) GetWatch(kind string, name string) (w watch.Interface) {
 	log := logger.WithName("GetWatch").WithValues("object", t.PipelineRun.NamespacedName.String(), "kind", kind)
 	namespace := t.PipelineRun.NamespacedName.Namespace
-	tknParam := cli.TektonParams{}
-	tknParam.SetNamespace(namespace)
-	cs, err := tknParam.Clients()
-	if err != nil {
-		log.Error(err, "create tekton k8s api client")
-		return nil
-	}
+	//tknParam := cli.TektonParams{}
+	var err error
 	timeout := int64(config.GetTimeout().Seconds())
 	opts := metav1.ListOptions{
 		FieldSelector:  fmt.Sprintf("metadata.name=%s", name),
@@ -151,7 +146,7 @@ func Condition(c v1beta1.Conditions) (status string, reason string) {
 	case corev1.ConditionUnknown:
 		status = "Running"
 	}
-	cstatus := status
+	cStatus := status
 
 	if c[0].Reason != "" && c[0].Reason != status {
 
@@ -166,10 +161,10 @@ func Condition(c v1beta1.Conditions) (status string, reason string) {
 			if _, ok := Reason[strings.ToLower(c[0].Reason)]; ok {
 				reason = Reason[strings.ToLower(c[0].Reason)]
 			}
-			status = cstatus
+			status = cStatus
 		}
 	} else {
-		status = cstatus
+		status = cStatus
 	}
 
 	return
@@ -187,4 +182,12 @@ func IsTerminated(c v1beta1.Conditions) bool {
 		return false
 	}
 	return false
+}
+
+func (t *Tekton) SetParam(params cli.TektonParams) {
+	tektonParams = params
+}
+
+func (t *Tekton) SetClient(clients *cli.Clients) {
+	cs = clients
 }
