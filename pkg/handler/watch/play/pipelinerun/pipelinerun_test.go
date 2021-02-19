@@ -26,7 +26,6 @@ import (
 	"github.com/w6d-io/ci-status/pkg/handler/watch/play/pipelinerun"
 	"k8s.io/apimachinery/pkg/types"
 
-
 	//versionedResource "github.com/tektoncd/pipeline/pkg/client/resource/clientset/versioned"
 	ctrl "sigs.k8s.io/controller-runtime"
 )

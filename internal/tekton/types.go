@@ -59,9 +59,9 @@ type Step struct {
 }
 
 var (
-	logger = ctrl.Log.WithName("tekton")
+	logger       = ctrl.Log.WithName("tekton")
 	tektonParams cli.TektonParams
-	cs           *cli.Clients
+	cls          *cli.Clients
 )
 
 type PipelineRunPayload struct {

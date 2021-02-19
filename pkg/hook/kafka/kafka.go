@@ -53,7 +53,7 @@ func Send(payload interface{}, URL *url.URL) error {
 			if err := k.Producer(messageKey, payload,
 				AuthKafka(ok), Async(async),
 				Protocol(protocol), Mechanisms(mechanisms),
-				); err != nil {
+			); err != nil {
 				return err
 			}
 			return nil

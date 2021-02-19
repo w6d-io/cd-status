@@ -43,9 +43,16 @@ func (t *Tekton) GetWatch(kind string, name string) (w watch.Interface) {
 		FieldSelector:  fmt.Sprintf("metadata.name=%s", name),
 		TimeoutSeconds: &timeout,
 	}
+	cs := t.GetClient(namespace)
+	if cs == nil {
+		return
+	}
 	switch kind {
 	case "pipelinerun", "pipelineruns":
 		log.V(2).Info("get pipelinerun", "name", name)
+		if cs.Tekton == nil {
+			return nil
+		}
 		_, err = cs.Tekton.TektonV1beta1().PipelineRuns(namespace).Get(context.TODO(), name, metav1.GetOptions{})
 		if apierrors.IsNotFound(err) {
 			return nil
@@ -60,6 +67,9 @@ func (t *Tekton) GetWatch(kind string, name string) (w watch.Interface) {
 		w, err = cs.Tekton.TektonV1beta1().TaskRuns(namespace).Watch(context.TODO(), opts)
 	case "po", "pod", "pods":
 		log.V(2).Info("get pod", "name", name)
+		if cs.Kube == nil {
+			return nil
+		}
 		_, err = cs.Kube.CoreV1().Pods(namespace).Get(context.TODO(), name, metav1.GetOptions{})
 		if apierrors.IsNotFound(err) {
 			return nil
@@ -189,5 +199,19 @@ func (t *Tekton) SetParam(params cli.TektonParams) {
 }
 
 func (t *Tekton) SetClient(clients *cli.Clients) {
-	cs = clients
+	cls = clients
+}
+
+func (t *Tekton) GetClient(namespace string) *cli.Clients {
+	if cls != nil {
+		return nil
+	}
+	var err error
+	tektonParams = cli.TektonParams{}
+	tektonParams.SetNamespace(namespace)
+	cls, err = tektonParams.Clients()
+	if err != nil {
+		cls = nil
+	}
+	return cls
 }

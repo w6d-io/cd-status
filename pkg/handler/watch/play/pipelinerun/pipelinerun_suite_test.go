@@ -36,10 +36,10 @@ func TestPipelineRun(t *testing.T) {
 
 }
 
-var cfg       *rest.Config
+var cfg *rest.Config
 var k8sClient client.Client
-var testEnv   *envtest.Environment
-var k8scs     k8s.Interface
+var testEnv *envtest.Environment
+var k8scs k8s.Interface
 
 var _ = BeforeSuite(func(done Done) {
 	By("bootstrapping test environment")

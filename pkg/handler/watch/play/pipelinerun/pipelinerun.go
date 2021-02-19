@@ -18,7 +18,6 @@ package pipelinerun
 
 import (
 	"github.com/go-logr/logr"
-	"github.com/tektoncd/cli/pkg/cli"
 	"github.com/w6d-io/ci-status/internal/tekton"
 	"k8s.io/apimachinery/pkg/types"
 )
@@ -42,14 +41,6 @@ func Scan(logger logr.Logger, nn types.NamespacedName, projectID int64, pipeline
 			},
 		},
 	}
-	tp := cli.TektonParams{}
-	tp.SetNamespace(nn.Namespace)
-	t.SetParam(tp)
-	cs, err := tp.Clients()
-	if err != nil {
-		return err
-	}
-	t.SetClient(cs)
 	if err := t.PipelineRunSupervise(); err != nil {
 		return err
 	}
