@@ -21,7 +21,7 @@ import (
 	"fmt"
 	"time"
 
-	kafkaGo "github.com/confluentinc/confluent-kafka-go/kafka"
+	kgo "github.com/confluentinc/confluent-kafka-go/kafka"
 )
 
 // Producer Creation of an emitter and send any type of value to its topic in kafka
@@ -30,7 +30,7 @@ func (k *Kafka) Producer(messageKey string, messageValue interface{}, opts ...Op
 
 	options := NewOptions(opts...)
 
-	producerCM := &kafkaGo.ConfigMap{
+	producerCM := &kgo.ConfigMap{
 		"bootstrap.servers": k.BootstrapServer,
 	}
 	if options.AuthKafka {
@@ -51,7 +51,7 @@ func (k *Kafka) Producer(messageKey string, messageValue interface{}, opts ...Op
 		}
 	}
 
-	p, err := kafkaGo.NewProducer(producerCM)
+	p, err := kgo.NewProducer(producerCM)
 	if err != nil {
 		return fmt.Errorf("failed to create producer: %s", err)
 	}
@@ -59,7 +59,7 @@ func (k *Kafka) Producer(messageKey string, messageValue interface{}, opts ...Op
 	go func() {
 		for e := range p.Events() {
 			switch ev := e.(type) {
-			case *kafkaGo.Message:
+			case *kgo.Message:
 				if ev.TopicPartition.Error != nil {
 					log.Error(ev.TopicPartition.Error, "Failed to deliver",
 						"stacktrace", ev.TopicPartition)
@@ -78,8 +78,8 @@ func (k *Kafka) Producer(messageKey string, messageValue interface{}, opts ...Op
 		log.Error(err, "marshal failed")
 		return err
 	}
-	if err := p.Produce(&kafkaGo.Message{
-		TopicPartition: kafkaGo.TopicPartition{Topic: &k.Topic, Partition: kafkaGo.PartitionAny},
+	if err := p.Produce(&kgo.Message{
+		TopicPartition: kgo.TopicPartition{Topic: &k.Topic, Partition: kgo.PartitionAny},
 		Key:            []byte(messageKey),
 		Value:          message,
 		Timestamp:      time.Now(),
