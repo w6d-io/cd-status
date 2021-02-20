@@ -63,7 +63,7 @@ func Play(c *gin.Context) {
 		err := scan(scanLog, nn, projectID, pipelineID)
 		if err != nil {
 			scanLog.Error(err, "Scan resource")
-			c.JSON(403, gin.H{"status": "error", "message": "scan resource failed"})
+			//c.JSON(403, gin.H{"status": "error", "message": "scan resource failed"})
 			return
 		}
 	}(payload.Object.Kind, payload.Object.NamespacedName, payload.ProjectID, payload.PipelineID)

@@ -26,12 +26,12 @@ import (
 
 type Payload struct {
 	Object     *Object `json:"object,omitempty"`
-	ProjectID  int64  `json:"project_id,omitempty"`
-	PipelineID int64  `json:"pipeline_id,omitempty"`
-	RepoURL    string `json:"repo_url,omitempty"`
-	Commit     Commit `json:"ref,omitempty"`
-	Stack      Stack  `json:"stack,omitempty"`
-	Status     string `json:"status,omitempty"`
+	ProjectID  int64   `json:"project_id,omitempty"`
+	PipelineID int64   `json:"pipeline_id,omitempty"`
+	RepoURL    string  `json:"repo_url,omitempty"`
+	Commit     Commit  `json:"ref,omitempty"`
+	Stack      Stack   `json:"stack,omitempty"`
+	Status     string  `json:"status,omitempty"`
 }
 
 // Commit contains all git information

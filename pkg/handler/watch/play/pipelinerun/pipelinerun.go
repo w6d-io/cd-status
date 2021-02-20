@@ -17,9 +17,11 @@ Created on 24/01/2021
 package pipelinerun
 
 import (
+	"github.com/avast/retry-go"
 	"github.com/go-logr/logr"
 	"github.com/w6d-io/ci-status/internal/tekton"
 	"k8s.io/apimachinery/pkg/types"
+	"time"
 )
 
 const KIND = "pipelinerun"
@@ -41,7 +43,15 @@ func Scan(logger logr.Logger, nn types.NamespacedName, projectID int64, pipeline
 			},
 		},
 	}
-	if err := t.PipelineRunSupervise(); err != nil {
+	if err := retry.Do(func() error {
+		if err := t.PipelineRunSupervise(); err != nil {
+			return err
+		}
+		return nil
+	},
+		retry.Attempts(5),
+		retry.Delay(time.Second),
+	); err != nil {
 		return err
 	}
 	return nil
