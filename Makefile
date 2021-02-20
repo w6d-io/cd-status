@@ -1,3 +1,6 @@
+
+IMG ?= w6dio/ci-status:latest
+
 # Get the currently used golang install path (in GOPATH/bin, unless GOBIN is set)
 ifeq (,$(shell go env GOBIN))
 GOBIN=$(shell go env GOPATH)/bin
@@ -40,7 +43,7 @@ vendor:
 
 # Build the docker image
 build: test
-	docker build . -t ${IMG}
+	docker build  --build-arg=VERSION=${VERSION} --build-arg=VCS_REF=${VCS_REF} --build-arg=BUILD_DATE=${BUILD_DATE}  -t ${IMG} .
 
 # Push the docker image
 push:
