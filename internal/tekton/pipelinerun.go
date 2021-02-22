@@ -39,7 +39,7 @@ func (t *Tekton) PipelineRunSupervise() error {
 	log := t.Log.WithName("PipelineRunSupervise").WithValues("object", t.PipelineRun.NamespacedName.String())
 	w := t.GetWatch("pipelinerun", t.PipelineRun.NamespacedName.Name)
 	if w == nil {
-		return fmt.Errorf("pipelinerun %s not found", t.PipelineRun.NamespacedName.String())
+		return fmt.Errorf("failed to get pipelinerun %s watch", t.PipelineRun.NamespacedName.String())
 	}
 	timeout := time.NewTimer(config.GetTimeout())
 	log.WithValues("timeout", config.GetTimeout()).V(1).Info("timeout set")

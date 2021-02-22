@@ -45,16 +45,24 @@ func (t *Tekton) GetWatch(kind string, name string) (w watch.Interface) {
 	}
 	cs := t.GetClient(namespace)
 	if cs == nil {
+		log.Error(errors.New("get client return nil"), "GetClient")
 		return
+	}
+	if cs.Tekton == nil {
+		log.Error(errors.New("tekton client is nil"), "check tekton client")
+		return nil
 	}
 	switch kind {
 	case "pipelinerun", "pipelineruns":
 		log.V(2).Info("get pipelinerun", "name", name)
-		if cs.Tekton == nil {
-			return nil
-		}
+
 		_, err = cs.Tekton.TektonV1beta1().PipelineRuns(namespace).Get(context.TODO(), name, metav1.GetOptions{})
 		if apierrors.IsNotFound(err) {
+			log.V(1).Info("not found")
+			return nil
+		}
+		if err != nil {
+			log.Error(err, "get resource failed")
 			return nil
 		}
 		w, err = cs.Tekton.TektonV1beta1().PipelineRuns(namespace).Watch(context.TODO(), opts)
@@ -62,16 +70,19 @@ func (t *Tekton) GetWatch(kind string, name string) (w watch.Interface) {
 		log.V(2).Info("get taskrun", "name", name)
 		_, err := cs.Tekton.TektonV1beta1().TaskRuns(namespace).Get(context.TODO(), name, metav1.GetOptions{})
 		if apierrors.IsNotFound(err) {
+			log.V(1).Info("not found")
+			return nil
+		}
+		if err != nil {
+			log.Error(err, "get resource failed")
 			return nil
 		}
 		w, err = cs.Tekton.TektonV1beta1().TaskRuns(namespace).Watch(context.TODO(), opts)
 	case "po", "pod", "pods":
 		log.V(2).Info("get pod", "name", name)
-		if cs.Kube == nil {
-			return nil
-		}
 		_, err = cs.Kube.CoreV1().Pods(namespace).Get(context.TODO(), name, metav1.GetOptions{})
 		if apierrors.IsNotFound(err) {
+			log.V(1).Info("not found")
 			return nil
 		}
 		w, err = cs.Kube.CoreV1().Pods(namespace).Watch(context.TODO(), opts)
@@ -204,7 +215,7 @@ func (t *Tekton) SetClient(clients *cli.Clients) {
 
 func (t *Tekton) GetClient(namespace string) *cli.Clients {
 	if cls != nil {
-		return nil
+		return cls
 	}
 	var err error
 	tektonParams = cli.TektonParams{}

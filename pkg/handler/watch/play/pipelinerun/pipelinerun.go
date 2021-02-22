@@ -32,25 +32,25 @@ func Scan(logger logr.Logger, nn types.NamespacedName, projectID int64, pipeline
 		WithValues("name", nn)
 	log.V(1).Info("start")
 	defer log.V(1).Info("stop")
-	t := tekton.Tekton{
-		ProjectID:  projectID,
-		PipelineID: pipelineID,
-		Log:        logger,
-		PipelineRun: tekton.PipelineRunPayload{
-			NamespacedName: types.NamespacedName{
-				Name:      nn.Name,
-				Namespace: nn.Namespace,
-			},
-		},
-	}
 	if err := retry.Do(func() error {
+		t := &tekton.Tekton{
+			ProjectID:  projectID,
+			PipelineID: pipelineID,
+			Log:        logger,
+			PipelineRun: tekton.PipelineRunPayload{
+				NamespacedName: types.NamespacedName{
+					Name:      nn.Name,
+					Namespace: nn.Namespace,
+				},
+			},
+		}
 		if err := t.PipelineRunSupervise(); err != nil {
 			return err
 		}
 		return nil
 	},
+		retry.Delay(3*time.Second),
 		retry.Attempts(5),
-		retry.Delay(time.Second),
 	); err != nil {
 		return err
 	}
