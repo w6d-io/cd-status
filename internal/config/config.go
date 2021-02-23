@@ -54,7 +54,7 @@ func New(filename string) error {
 				return err
 			}
 			if !IsInArray(config.Webhooks[i].URL.Scheme, WHSupport) {
-				return fmt.Errorf("sheme %v not supported", config.Webhooks[i].URL.Scheme)
+				return fmt.Errorf("scheme %v not supported", config.Webhooks[i].URL.Scheme)
 			}
 			if config.Webhooks[i].URL.Scheme == "kafka" {
 				values := config.Webhooks[i].URL.Query()
