@@ -1,0 +1,8 @@
+---
+auth:
+  - username: test
+    password: test
+webhooks:
+  - url: kafka://localhost:9092
+  - url: http://localhost:8001/test
+  - url: http://localhost:8001/test
