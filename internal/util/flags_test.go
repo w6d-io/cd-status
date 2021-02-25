@@ -44,10 +44,10 @@ var _ = Describe("Flags", func() {
 				Expect(configFlag.Set("/tmp/no-file.yaml")).Should(Equal(errors.New("file /tmp/no-file.yaml does not exist")))
 			})
 			It("File has got errors", func() {
-				Expect(configFlag.Set("../../test/config/file2.yaml").Error()).Should(ContainSubstring("instanciate config returns "))
+				Expect(configFlag.Set("testdata/file2.yaml").Error()).Should(ContainSubstring("instantiate config returns "))
 			})
 			It("File is correct", func() {
-				Expect(configFlag.Set("../../test/config/file1.yaml")).To(BeNil())
+				Expect(configFlag.Set("testdata/file1.yaml")).To(BeNil())
 			})
 		})
 		levelFlag := util.LevelFlag{}

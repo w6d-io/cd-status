@@ -38,12 +38,12 @@ var _ = Describe("Tekton", func() {
 			It("get out the loop", func() {
 				err := config.SetTimeout(0)
 				Expect(err).To(Succeed())
-				err = createPipelineRun("pr-test-1-1")
-				Expect(err).To(Succeed())
+				err = createPipelineRun("pod-test-1-1")
+				Expect(err).NotTo(Succeed())
 				t := &tekton.Tekton{
 					PipelineRun: tekton.PipelineRunPayload{
 						NamespacedName: types.NamespacedName{
-							Name:      "pr-test-1-1",
+							Name:      "pod-test-1-1",
 							Namespace: "default",
 						},
 					},
