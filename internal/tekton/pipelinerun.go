@@ -19,8 +19,8 @@ package tekton
 import (
 	"context"
 	"fmt"
-	"github.com/jonboulle/clockwork"
 	"github.com/tektoncd/cli/pkg/formatted"
+	"github.com/w6d-io/ci-status/internal/util"
 	"github.com/w6d-io/ci-status/pkg/hook"
 	"k8s.io/apimachinery/pkg/types"
 	"knative.dev/pkg/apis/duck/v1beta1"
@@ -69,8 +69,16 @@ func (t *Tekton) PipelineRunSupervise() error {
 			}
 			log.V(1).Info("start sub tasks")
 			pr := e.Object.(*tkn.PipelineRun)
+			t.PipelineRun.ProjectID = t.ProjectID
+			t.PipelineRun.PipelineID = t.PipelineID
+			t.PipelineRun.StartTime = util.UnixMilli(pr.Status.StartTime)
 			t.SupTasks(pr)
 			if IsTerminated(pr.Status.Conditions) {
+				t.PipelineRun.CompletionTime = util.UnixMilli(pr.Status.CompletionTime)
+				if err := hook.Send(t.PipelineRun, t.Log); err != nil {
+					log.Error(err, "hook failed")
+					return err
+				}
 				return nil
 			}
 		}
@@ -148,6 +156,7 @@ func (t *Tekton) UpdatePayloadTask(task Task) {
 				Name:              task.Name,
 				Status:            task.Status,
 				StartTime:         task.StartTime,
+				CompletionTime:    task.CompletionTime,
 				StartTimeRaw:      task.StartTimeRaw,
 				Duration:          task.Duration,
 				Message:           task.Message,
@@ -181,7 +190,8 @@ func (PipelineRunPayload) GetTask(taskRunName string, taskrunStatus *tkn.Pipelin
 	return Task{
 		TaskRunName:       taskRunName,
 		Name:              taskrunStatus.PipelineTaskName,
-		StartTime:         formatted.Age(status.StartTime, clockwork.NewRealClock()),
+		StartTime:         util.UnixMilli(status.StartTime),
+		CompletionTime:    util.UnixMilli(status.CompletionTime),
 		Duration:          formatted.Duration(status.StartTime, status.CompletionTime),
 		Status:            st,
 		StartTimeRaw:      status.StartTime,

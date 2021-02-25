@@ -43,7 +43,9 @@ var _ = Describe("Watch", func() {
   "repo_url": " https://github.com/w6d-io/nodejs-sample.git"
 }
 `
-					f := func(_ logr.Logger, _ types.NamespacedName, _ int64, _ int64) error { return nil }
+					f := func(_ logr.Logger, _ types.NamespacedName, _ int64, _ int64, _ string, _ string, _ string, _ string) error {
+						return nil
+					}
 					play.AddWatcher("test", f)
 					r := ioutil.NopCloser(strings.NewReader(payload))
 					w := httptest.NewRecorder()
@@ -69,7 +71,9 @@ var _ = Describe("Watch", func() {
   "repo_url": " https://github.com/w6d-io/nodejs-sample.git"
 }
 `
-					f := func(_ logr.Logger, _ types.NamespacedName, _ int64, _ int64) error { return errors.New("test") }
+					f := func(_ logr.Logger, _ types.NamespacedName, _ int64, _ int64, _ string, _ string, _ string, _ string) error {
+						return errors.New("test")
+					}
 					play.AddWatcher("test", f)
 					r := ioutil.NopCloser(strings.NewReader(payload))
 					w := httptest.NewRecorder()

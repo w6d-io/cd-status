@@ -27,7 +27,8 @@ import (
 const KIND = "pipelinerun"
 
 // Scan stars the scan of pipeline run tekton resource
-func Scan(logger logr.Logger, nn types.NamespacedName, projectID int64, pipelineID int64) error {
+func Scan(logger logr.Logger, nn types.NamespacedName, projectID int64, pipelineID int64,
+	commitID, commitMsg, branch, repo string) error {
 	log := logger.WithName("Scan").WithValues("kind", "pipelinerun").
 		WithValues("name", nn)
 	log.V(1).Info("start")
@@ -42,6 +43,10 @@ func Scan(logger logr.Logger, nn types.NamespacedName, projectID int64, pipeline
 					Name:      nn.Name,
 					Namespace: nn.Namespace,
 				},
+				CommitID:  commitID,
+				CommitMsg: commitMsg,
+				Branch:    branch,
+				RepoURL:   repo,
 			},
 		}
 		if err := t.PipelineRunSupervise(); err != nil {

@@ -19,8 +19,8 @@ package tekton
 import (
 	"context"
 	"fmt"
-	"github.com/jonboulle/clockwork"
 	"github.com/tektoncd/cli/pkg/formatted"
+	"github.com/w6d-io/ci-status/internal/util"
 	"time"
 
 	tkn "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
@@ -115,7 +115,8 @@ func (TaskRunPayload) GetTask(taskRun *tkn.TaskRun) Task {
 	return Task{
 		TaskRunName:       taskRun.Name,
 		Name:              taskName,
-		StartTime:         formatted.Age(status.StartTime, clockwork.NewRealClock()),
+		StartTime:         util.UnixMilli(status.StartTime),
+		CompletionTime:    util.UnixMilli(status.CompletionTime),
 		Duration:          formatted.Duration(status.StartTime, status.CompletionTime),
 		Status:            st,
 		StartTimeRaw:      status.StartTime,

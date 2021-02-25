@@ -60,9 +60,13 @@ type Stack struct {
 	Package string `json:"package,omitempty"`
 }
 
+type Interface interface {
+	Scan()
+}
+
 var (
-	scans   = make(map[string]func(logr.Logger, types.NamespacedName, int64, int64) error)
-	scan    func(logr.Logger, types.NamespacedName, int64, int64) error
+	scans   = make(map[string]func(logr.Logger, types.NamespacedName, int64, int64, string, string, string, string) error)
+	scan    func(logr.Logger, types.NamespacedName, int64, int64, string, string, string, string) error
 	payload Payload
 	ok      bool
 )

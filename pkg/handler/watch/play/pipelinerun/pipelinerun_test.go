@@ -49,7 +49,9 @@ var _ = Describe("PipelineRun", func() {
 			It("return no error", func() {
 				log := ctrl.Log.WithName("unit-test")
 				nn := types.NamespacedName{}
-				_ = pipelinerun.Scan(log, nn, 1, 1)
+				_ = pipelinerun.Scan(log, nn, 1, 1,
+					"ac12ac12ac12ac12ac12ac12", "test", "test",
+					"https://test.example.com/repo")
 				//Expect(err).To(Succeed())
 			})
 		})

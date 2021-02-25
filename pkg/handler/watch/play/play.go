@@ -60,7 +60,9 @@ func Play(c *gin.Context) {
 	go func(kind string, nn types.NamespacedName, projectID, pipelineID int64) {
 		corId := c.Writer.Header().Get(config.CorrelationId)
 		scanLog := ctrl.Log.WithValues("correlation_id", corId, "kind", kind)
-		err := scan(scanLog, nn, projectID, pipelineID)
+		err := scan(scanLog, nn, projectID, pipelineID,
+			payload.Commit.SHA, payload.Commit.Message, payload.Commit.Ref,
+			payload.RepoURL)
 		if err != nil {
 			scanLog.Error(err, "Scan resource")
 			//c.JSON(403, gin.H{"status": "error", "message": "scan resource failed"})
@@ -71,6 +73,6 @@ func Play(c *gin.Context) {
 }
 
 // AddWatcher inserts method to scans map
-func AddWatcher(name string, f func(logr.Logger, types.NamespacedName, int64, int64) error) {
+func AddWatcher(name string, f func(logr.Logger, types.NamespacedName, int64, int64, string, string, string, string) error) {
 	scans[name] = f
 }

@@ -109,7 +109,7 @@ var _ = Describe("Tekton", func() {
 func createPipelineRun(name string) error {
 	pr := &tkn.PipelineRun{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: name,
+			Name:      name,
 			Namespace: "default",
 		},
 		Spec: tkn.PipelineRunSpec{
@@ -127,7 +127,7 @@ func createPipelineRun(name string) error {
 func deletePipelineRun(name string) error {
 	pr := &tkn.PipelineRun{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: name,
+			Name:      name,
 			Namespace: "default",
 		},
 		Spec: tkn.PipelineRunSpec{

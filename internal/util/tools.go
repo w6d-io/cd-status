@@ -17,7 +17,17 @@ Created on 24/01/2021
 
 package util
 
+import metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
 // RemoveIndex takes a slice or an array and remove the element designated by the index
 func RemoveIndex(s []string, index int) []string {
 	return append(s[:index], s[index+1:]...)
+}
+
+// UnixMilli returns Unix time in millisecond
+func UnixMilli(t *metav1.Time) int64 {
+	if t.IsZero() {
+		return 0
+	}
+	return t.UnixNano() / 1000000
 }
