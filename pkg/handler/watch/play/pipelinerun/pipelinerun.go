@@ -17,31 +17,46 @@ Created on 24/01/2021
 package pipelinerun
 
 import (
+	"github.com/avast/retry-go"
 	"github.com/go-logr/logr"
 	"github.com/w6d-io/ci-status/internal/tekton"
 	"k8s.io/apimachinery/pkg/types"
+	"time"
 )
 
 const KIND = "pipelinerun"
 
 // Scan stars the scan of pipeline run tekton resource
-func Scan(logger logr.Logger, nn types.NamespacedName, projectID int64, pipelineID int64) error {
+func Scan(logger logr.Logger, nn types.NamespacedName, projectID int64, pipelineID int64,
+	commitID, commitMsg, branch, repo string) error {
 	log := logger.WithName("Scan").WithValues("kind", "pipelinerun").
 		WithValues("name", nn)
 	log.V(1).Info("start")
 	defer log.V(1).Info("stop")
-	t := tekton.Tekton{
-		ProjectID:  projectID,
-		PipelineID: pipelineID,
-		Log:        logger,
-		PipelineRun: tekton.PipelineRunPayload{
-			NamespacedName: types.NamespacedName{
-				Name:      nn.Name,
-				Namespace: nn.Namespace,
+	if err := retry.Do(func() error {
+		t := &tekton.Tekton{
+			ProjectID:  projectID,
+			PipelineID: pipelineID,
+			Log:        logger,
+			PipelineRun: tekton.PipelineRunPayload{
+				NamespacedName: types.NamespacedName{
+					Name:      nn.Name,
+					Namespace: nn.Namespace,
+				},
+				CommitID:  commitID,
+				CommitMsg: commitMsg,
+				Branch:    branch,
+				RepoURL:   repo,
 			},
-		},
-	}
-	if err := t.PipelineRunSupervise(); err != nil {
+		}
+		if err := t.PipelineRunSupervise(); err != nil {
+			return err
+		}
+		return nil
+	},
+		retry.Delay(3*time.Second),
+		retry.Attempts(5),
+	); err != nil {
 		return err
 	}
 	return nil

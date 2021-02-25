@@ -25,13 +25,13 @@ import (
 //type ScanFct func(Payload, logr.Logger) error
 
 type Payload struct {
-	Object     Object `json:"object,omitempty"`
-	ProjectID  int64  `json:"project_id,omitempty"`
-	PipelineID int64  `json:"pipeline_id,omitempty"`
-	RepoURL    string `json:"repo_url,omitempty"`
-	Commit     Commit `json:"ref,omitempty"`
-	Stack      Stack  `json:"stack,omitempty"`
-	Status     string `json:"status,omitempty"`
+	Object     *Object `json:"object,omitempty"`
+	ProjectID  int64   `json:"project_id,omitempty"`
+	PipelineID int64   `json:"pipeline_id,omitempty"`
+	RepoURL    string  `json:"repo_url,omitempty"`
+	Commit     Commit  `json:"ref,omitempty"`
+	Stack      Stack   `json:"stack,omitempty"`
+	Status     string  `json:"status,omitempty"`
 }
 
 // Commit contains all git information
@@ -48,7 +48,7 @@ type Commit struct {
 
 type Object struct {
 	Kind           string               `json:"kind,omitempty"`
-	NamespacedName types.NamespacedName `json:"namespaced,omitempty"`
+	NamespacedName types.NamespacedName `json:"namespaced_name,omitempty"`
 }
 
 // Stack contains the language and package of the source
@@ -60,9 +60,13 @@ type Stack struct {
 	Package string `json:"package,omitempty"`
 }
 
+type Interface interface {
+	Scan()
+}
+
 var (
-	scans   = make(map[string]func(logr.Logger, types.NamespacedName, int64, int64) error)
-	scan    func(logr.Logger, types.NamespacedName, int64, int64) error
+	scans   = make(map[string]func(logr.Logger, types.NamespacedName, int64, int64, string, string, string, string) error)
+	scan    func(logr.Logger, types.NamespacedName, int64, int64, string, string, string, string) error
 	payload Payload
 	ok      bool
 )

@@ -32,21 +32,35 @@ type Tekton struct {
 	Log         logr.Logger        `json:"-"`
 }
 
+type PipelineRunPayload struct {
+	NamespacedName types.NamespacedName `json:"namespaced_name"`
+	Status         string               `json:"status"`
+	Message        string               `json:"message"`
+	RepoURL        string               `json:"repo_url"`
+	Branch         string               `json:"branch"`
+	CommitID       string               `json:"commit_id"`
+	CommitMsg      string               `json:"commit_msg"`
+	TaskRuns       []TaskRunPayload     `json:"task_runs"`
+	ProjectID      int64                `json:"project_id"`
+	PipelineID     int64                `json:"pipeline_id"`
+	StartTime      int64                `json:"start_time"`
+	CompletionTime int64                `json:"completion_time"`
+}
+
 type TaskRunPayload struct {
 	NamespacedName types.NamespacedName `json:"namespaced_name"`
 	Tasks          []Task               `json:"tasks"`
 }
 
-type Tasks []Task
-
 type Task struct {
-	TaskRunName string `json:"-"`
-	Name        string `json:"name"`
-	Status      string `json:"status"`
-	StartTime   string `json:"start_time"`
-	Duration    string `json:"duration"`
-	Message     string `json:"message"`
-	Steps       []Step `json:"steps"`
+	TaskRunName    string `json:"-"`
+	Name           string `json:"name"`
+	Status         string `json:"status"`
+	StartTime      int64  `json:"start_time"`
+	CompletionTime int64  `json:"completion_time"`
+	Duration       string `json:"duration"`
+	Message        string `json:"message"`
+	Steps          []Step `json:"steps"`
 
 	CompletionTimeRaw *metav1.Time `json:"completion_time_raw"`
 	StartTimeRaw      *metav1.Time `json:"start_time_raw"`
@@ -58,18 +72,13 @@ type Step struct {
 	Message string `json:"message"`
 }
 
+type Tasks []Task
+
 var (
 	logger       = ctrl.Log.WithName("tekton")
 	tektonParams cli.TektonParams
 	cls          *cli.Clients
 )
-
-type PipelineRunPayload struct {
-	NamespacedName types.NamespacedName `json:"namespaced_name"`
-	Status         string               `json:"status"`
-	Message        string               `json:"message"`
-	TaskRuns       []TaskRunPayload     `json:"task_runs"`
-}
 
 // Reason ...
 var Reason = map[string]string{

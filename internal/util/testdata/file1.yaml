@@ -3,5 +3,5 @@ auth:
   - username: test
     password: test
 webhooks:
-  - url: kafka://localhost:9092
+  - url: kafka://localhost:9092?topic=MONITORING
   - url: http://localhost:8001/test

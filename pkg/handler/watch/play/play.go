@@ -23,8 +23,6 @@ import (
 	"github.com/w6d-io/ci-status/pkg/handler/watch/play/pipelinerun"
 	"github.com/w6d-io/ci-status/pkg/router"
 	"k8s.io/apimachinery/pkg/types"
-	"net/http"
-
 	ctrl "sigs.k8s.io/controller-runtime"
 
 	"github.com/gin-gonic/gin"
@@ -47,18 +45,27 @@ func Play(c *gin.Context) {
 		c.JSON(400, gin.H{"status": "error", "message": err.Error()})
 		return
 	}
+	log.V(2).Info("received", "payload", payload)
+	if payload.Object.NamespacedName.Name == "" || payload.Object.NamespacedName.Namespace == "" {
+		c.JSON(401, gin.H{"status": "error", "message": "name or/and namespace missing"})
+		return
+	}
 	log = log.WithValues("kind", payload.Object.Kind)
 	if scan, ok = scans[payload.Object.Kind]; !ok {
 		log.Error(errors.New(payload.Object.Kind+" does not supported"), "BindJSON")
-		c.JSON(http.StatusNotImplemented, gin.H{"status": "error", "message": payload.Object.Kind + " does not supported"})
+		c.JSON(402, gin.H{"status": "error", "message": payload.Object.Kind + " does not supported"})
 		return
 	}
+
 	go func(kind string, nn types.NamespacedName, projectID, pipelineID int64) {
 		corId := c.Writer.Header().Get(config.CorrelationId)
 		scanLog := ctrl.Log.WithValues("correlation_id", corId, "kind", kind)
-		err := scan(scanLog, nn, projectID, pipelineID)
+		err := scan(scanLog, nn, projectID, pipelineID,
+			payload.Commit.SHA, payload.Commit.Message, payload.Commit.Ref,
+			payload.RepoURL)
 		if err != nil {
 			scanLog.Error(err, "Scan resource")
+			//c.JSON(403, gin.H{"status": "error", "message": "scan resource failed"})
 			return
 		}
 	}(payload.Object.Kind, payload.Object.NamespacedName, payload.ProjectID, payload.PipelineID)
@@ -66,6 +73,6 @@ func Play(c *gin.Context) {
 }
 
 // AddWatcher inserts method to scans map
-func AddWatcher(name string, f func(logr.Logger, types.NamespacedName, int64, int64) error) {
+func AddWatcher(name string, f func(logr.Logger, types.NamespacedName, int64, int64, string, string, string, string) error) {
 	scans[name] = f
 }

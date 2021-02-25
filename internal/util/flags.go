@@ -154,7 +154,7 @@ func (f ConfigFlag) Set(flagValue string) error {
 		return fmt.Errorf("file %s does not exist", flagValue)
 	}
 	if err := config.New(flagValue); err != nil {
-		return fmt.Errorf("instanciate config returns %s", err)
+		return fmt.Errorf("instantiate config returns %s", err)
 	}
 	f.value = flagValue
 	return nil

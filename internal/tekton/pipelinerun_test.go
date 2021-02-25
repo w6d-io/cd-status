@@ -17,8 +17,11 @@ Created on 25/01/2021
 package tekton_test
 
 import (
+	"context"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	tkn "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	ctrl "sigs.k8s.io/controller-runtime"
 
 	"github.com/w6d-io/ci-status/internal/config"
@@ -28,10 +31,15 @@ import (
 
 var _ = Describe("Tekton", func() {
 	Context("PipelineRunSupervise", func() {
+		BeforeEach(func() {
+
+		})
 		When("timeout is reached", func() {
 			It("get out the loop", func() {
 				err := config.SetTimeout(0)
 				Expect(err).To(Succeed())
+				err = createPipelineRun("pod-test-1-1")
+				Expect(err).NotTo(Succeed())
 				t := &tekton.Tekton{
 					PipelineRun: tekton.PipelineRunPayload{
 						NamespacedName: types.NamespacedName{
@@ -43,7 +51,8 @@ var _ = Describe("Tekton", func() {
 				}
 				err = t.PipelineRunSupervise()
 				Expect(err).NotTo(Succeed())
-				Expect(err.Error()).To(Equal("pipelinerun default/pod-test-1-1 not found"))
+				Expect(err.Error()).To(Equal("failed to get pipelinerun default/pod-test-1-1 watch"))
+				deletePipelineRun("pr-test-1-1")
 			})
 		})
 	})
@@ -96,3 +105,39 @@ var _ = Describe("Tekton", func() {
 		})
 	})
 })
+
+func createPipelineRun(name string) error {
+	pr := &tkn.PipelineRun{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: "default",
+		},
+		Spec: tkn.PipelineRunSpec{
+			PipelineRef: &tkn.PipelineRef{
+				Name: "pipeline-test-1-1",
+			},
+		},
+	}
+	if err := k8sClient.Create(context.TODO(), pr); err != nil {
+		return err
+	}
+	return nil
+}
+
+func deletePipelineRun(name string) error {
+	pr := &tkn.PipelineRun{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: "default",
+		},
+		Spec: tkn.PipelineRunSpec{
+			PipelineRef: &tkn.PipelineRef{
+				Name: "pipeline-test-1-1",
+			},
+		},
+	}
+	if err := k8sClient.Delete(context.TODO(), pr); err != nil {
+		return err
+	}
+	return nil
+}

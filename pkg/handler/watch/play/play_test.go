@@ -1,6 +1,7 @@
 package play_test
 
 import (
+	"errors"
 	"github.com/go-logr/logr"
 	"github.com/w6d-io/ci-status/pkg/handler/watch/play"
 	"io/ioutil"
@@ -13,6 +14,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/framer"
 
 	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
 )
 
 func init() {
@@ -21,17 +23,17 @@ func init() {
 
 var _ = Describe("Watch", func() {
 	Describe("a payload has been received", func() {
-		Context("Payload is correct", func() {
+		When("Payload is correct", func() {
 			Context("Pipelinerun scan", func() {
 				var (
 					payload string
 				)
-				BeforeEach(func() {
+				It("watch for pipelinerun", func() {
 					payload = `
 {
   "object": {
     "kind": "pipelinerun",
-    namespaced_name: {
+    "namespaced_name": {
       "name": "pipeline-run-1-1",
       "namespace": "default"
     }
@@ -41,30 +43,57 @@ var _ = Describe("Watch", func() {
   "repo_url": " https://github.com/w6d-io/nodejs-sample.git"
 }
 `
-				})
-				It("add watcher", func() {
-					f := func(_ logr.Logger, _ types.NamespacedName, _ int64, _ int64) error { return nil }
+					f := func(_ logr.Logger, _ types.NamespacedName, _ int64, _ int64, _ string, _ string, _ string, _ string) error {
+						return nil
+					}
 					play.AddWatcher("test", f)
-				})
-				It("watch for pipelinerun", func() {
 					r := ioutil.NopCloser(strings.NewReader(payload))
 					w := httptest.NewRecorder()
-
 					c, _ := gin.CreateTestContext(w)
 					c.Request = &http.Request{
 						Body: framer.NewJSONFramedReader(r),
 					}
 					play.Play(c)
+					Expect(c.Writer.Status()).To(Equal(200))
+				})
+				It("scan failed", func() {
+					payload = `
+{
+  "object": {
+    "kind": "pipelinerun",
+    "namespaced_name": {
+      "name": "pipeline-run-1-1",
+      "namespace": "default"
+    }
+  },
+  "project_id": 1,
+  "pipeline_id": 1,
+  "repo_url": " https://github.com/w6d-io/nodejs-sample.git"
+}
+`
+					f := func(_ logr.Logger, _ types.NamespacedName, _ int64, _ int64, _ string, _ string, _ string, _ string) error {
+						return errors.New("test")
+					}
+					play.AddWatcher("test", f)
+					r := ioutil.NopCloser(strings.NewReader(payload))
+					w := httptest.NewRecorder()
+					c, _ := gin.CreateTestContext(w)
+					c.Request = &http.Request{
+						Body: framer.NewJSONFramedReader(r),
+					}
+					play.Play(c)
+					Expect(c.Writer.Status()).To(Equal(200))
 				})
 			})
 		})
-		Context("Payload is not correct", func() {
+		When("Payload is not correct", func() {
 			Context("pipelinerun scan", func() {
 				It("payload badly formatted", func() {
 					payload := `
 {
   "object": {
     "kind": "pipelinerun",
+	"namespaced_name"
     "name": "pipeline-run-1-1"
   },
   "project_id": 1,
@@ -77,6 +106,7 @@ var _ = Describe("Watch", func() {
 					c.Request = &http.Request{
 						Body: framer.NewJSONFramedReader(r)}
 					play.Play(c)
+					Expect(c.Writer.Status()).To(Equal(400))
 				})
 				It("payload object kind is not supported", func() {
 					payload := `
@@ -96,6 +126,7 @@ var _ = Describe("Watch", func() {
 					c.Request = &http.Request{
 						Body: framer.NewJSONFramedReader(r)}
 					play.Play(c)
+					Expect(c.Writer.Status()).To(Equal(402))
 				})
 				It("Scan return an error", func() {
 					payload := `
@@ -115,6 +146,30 @@ var _ = Describe("Watch", func() {
 					c.Request = &http.Request{
 						Body: framer.NewJSONFramedReader(r)}
 					play.Play(c)
+					Expect(c.Writer.Status()).To(Equal(200))
+				})
+				It("name or namespace missing handler return an error", func() {
+					payload := `
+{
+  "object": {
+    "kind": "pipelinerun",
+	"namespaced_name": {
+      "name": "",
+      "namespace": ""
+    }
+  },
+  "project_id": 1,
+  "pipeline_id": 1,
+  "repo_url": " https://github.com/w6d-io/nodejs-sample.git"
+}
+`
+					r := ioutil.NopCloser(strings.NewReader(payload))
+					w := httptest.NewRecorder()
+					c, _ := gin.CreateTestContext(w)
+					c.Request = &http.Request{
+						Body: framer.NewJSONFramedReader(r)}
+					play.Play(c)
+					Expect(c.Writer.Status()).To(Equal(401))
 				})
 			})
 		})
