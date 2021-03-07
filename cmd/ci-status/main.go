@@ -25,6 +25,7 @@ import (
 	"github.com/w6d-io/ci-status/pkg/hook"
 	"os"
 
+	zapraw "go.uber.org/zap"
 	ctrl "sigs.k8s.io/controller-runtime"
 
 	"github.com/w6d-io/ci-status/internal/util"
@@ -73,7 +74,7 @@ func main() {
 
 	opts.Development = os.Getenv("RELEASE") != "prod"
 	opts.StacktraceLevel = zapcore.PanicLevel
-	ctrl.SetLogger(zap.New(zap.UseFlagOptions(&opts)))
+	ctrl.SetLogger(zap.New(zap.UseFlagOptions(&opts), zap.RawZapOpts(zapraw.AddCaller())))
 
 	setupLog.Info("starting ci-status", "Version", Version, "Built",
 		Built, "Revision", Revision, "Arch", OsArch, "GoVersion", GoVersion)
