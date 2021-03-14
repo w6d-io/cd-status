@@ -29,7 +29,7 @@ func init() {
 }
 
 func Send(payload interface{}, logger logr.Logger) error {
-	logger.V(2).Info("to send", "payload", payload)
+	logger.V(1).Info("to send", "payload", payload)
 	go func(payload interface{}, logger logr.Logger) {
 		if err := DoSend(payload, logger); err != nil {
 			logger.Error(err, "DoSend")

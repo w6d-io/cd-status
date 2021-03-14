@@ -18,11 +18,23 @@ var _ = Describe("Router", func() {
 	})
 	Context("The engine", func() {
 		It("run failed to listen", func() {
+			config.SetAuth([]config.Auth{
+				{
+					Username: "test",
+					Password: "test",
+				},
+			})
 			config.SetListen("bad-address:ee")
 			Expect(router.Run().Error()).To(ContainSubstring("listen tcp:"))
 		})
 		It("failed on stop", func() {
 			Expect(router.Stop()).ToNot(HaveOccurred())
+		})
+	})
+	Context("Auth is enable", func() {
+		It("set auth in engine", func() {
+			f := func(c *gin.Context) { return }
+			router.AddGET("/test", f)
 		})
 	})
 })

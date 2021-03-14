@@ -17,7 +17,9 @@ Created on 28/01/2021
 package tekton_test
 
 import (
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"knative.dev/pkg/apis/duck/v1beta1"
 	"time"
 
 	. "github.com/onsi/ginkgo"
@@ -78,11 +80,12 @@ var _ = Describe("Tekton", func() {
 					Name: "task1",
 				},
 				{
-					Name: "task2",
+					Name:      "task2",
+					StartTime: 1,
 				},
 			}
 			Expect(ts.Len()).To(Equal(2))
-			Expect(ts.Less(0, 1)).To(Equal(false))
+			Expect(ts.Less(0, 1)).To(Equal(true))
 			ts.Swap(0, 1)
 			ts[1].StartTimeRaw = &metav1.Time{
 				Time: time.Now().AddDate(0, 0, -1),
@@ -99,6 +102,80 @@ var _ = Describe("Tekton", func() {
 				Time: time.Now().AddDate(0, 0, -1),
 			}
 			ts.Swap(0, 1)
+		})
+	})
+	Context("get condition", func() {
+		It("get none", func() {
+			c := v1beta1.Conditions{}
+			status, reason := tekton.Condition(c)
+			Expect(status).To(Equal("---"))
+			Expect(reason).To(Equal(""))
+		})
+		It("get a status Cancelled", func() {
+			c := v1beta1.Conditions{
+				{
+					Status: corev1.ConditionFalse,
+					Reason: "PipelineRunCancelled",
+				},
+			}
+			status, reason := tekton.Condition(c)
+			Expect(status).To(Equal("Cancelled"))
+			Expect(reason).To(Equal("Pipeline cancelled"))
+		})
+		It("get a status Cancelled", func() {
+			c := v1beta1.Conditions{
+				{
+					Status: corev1.ConditionFalse,
+					Reason: "PipelineRunTimeout",
+				},
+			}
+			status, reason := tekton.Condition(c)
+			Expect(status).To(Equal("Failed"))
+			Expect(reason).To(Equal("Pipeline timeout"))
+		})
+		It("get a status Running", func() {
+			c := v1beta1.Conditions{
+				{
+					Status: corev1.ConditionUnknown,
+				},
+			}
+			status, reason := tekton.Condition(c)
+			Expect(status).To(Equal("Running"))
+			Expect(reason).To(Equal(""))
+		})
+		It("get a status Succeeded", func() {
+			c := v1beta1.Conditions{
+				{
+					Status: corev1.ConditionTrue,
+				},
+			}
+			status, reason := tekton.Condition(c)
+			Expect(status).To(Equal("Succeeded"))
+			Expect(reason).To(Equal(""))
+		})
+	})
+	Context("check condition terminated", func() {
+		It("get false because empty", func() {
+			c := v1beta1.Conditions{}
+			Expect(tekton.IsTerminated(c)).To(Equal(false))
+		})
+		It("get true because condition is false", func() {
+			c := v1beta1.Conditions{
+				{
+					Status: corev1.ConditionFalse,
+					Reason: "PipelineRunCancelled",
+				},
+			}
+			Expect(tekton.IsTerminated(c)).To(Equal(true))
+		})
+		It("get false because condition is unknown", func() {
+			c := v1beta1.Conditions{
+				{
+					Status: corev1.ConditionUnknown,
+					Reason: "PipelineRunCancelled",
+				},
+			}
+			Expect(tekton.IsTerminated(c)).To(Equal(false))
 		})
 	})
 })

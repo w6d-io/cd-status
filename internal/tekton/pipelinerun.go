@@ -94,28 +94,34 @@ func (t *Tekton) SupTasks(pr *tkn.PipelineRun) {
 		log.Error(err, "hook failed")
 	}
 	currentTask := make(map[string]bool)
-	var wg sync.WaitGroup
+	//var wg sync.WaitGroup
 	for _, task := range t.PipelineRun.GetTasks(pr) {
 		if currentTask[task.Name] {
-			log.WithValues("task", task.Name).V(2).Info("skipped")
+			log.WithValues("task", task.Name).V(1).Info("skipped")
 			continue
 		}
 		rlog := log.V(1).WithValues("name", task.Name)
 		rlog.Info("work")
 		currentTask[task.Name] = true
 		rlog.V(1).Info("Add wait")
-		wg.Add(1)
+		nn := types.NamespacedName{Namespace: task.TaskRunName, Name: task.Name}
+		if err := t.TaskRunSupervise(nn); err != nil {
+			log.Error(err, "taskrun supervising")
+			return
+		}
 
-		go func(wg *sync.WaitGroup, nn types.NamespacedName) {
-			defer delete(currentTask, nn.Name)
-			defer removeWait(log, wg)
-			if err := t.TaskRunSupervise(nn); err != nil {
-				log.Error(err, "taskrun supervising")
-				return
-			}
-		}(&wg, types.NamespacedName{Namespace: task.TaskRunName, Name: task.Name})
+		//wg.Add(1)
+
+		//go func(wg *sync.WaitGroup, nn types.NamespacedName) {
+		//	defer delete(currentTask, nn.Name)
+		//	defer removeWait(log, wg)
+		//	if err := t.TaskRunSupervise(nn); err != nil {
+		//		log.Error(err, "taskrun supervising")
+		//		return
+		//	}
+		//}(&wg, types.NamespacedName{Namespace: task.TaskRunName, Name: task.Name})
 	}
-	wg.Wait()
+	//wg.Wait()
 }
 
 func removeWait(logger logr.Logger, wg *sync.WaitGroup) {
@@ -124,8 +130,8 @@ func removeWait(logger logr.Logger, wg *sync.WaitGroup) {
 }
 
 func (p *PipelineRunPayload) SetCondition(c v1beta1.Conditions) {
-	logger.V(2).Info("SetCondition")
-	condition, reason := GetStatusReason(c)
+	logger.V(1).Info("SetCondition")
+	condition, reason := Condition(c)
 	p.Status = condition
 	p.Message = reason
 }
@@ -177,7 +183,7 @@ func (p *PipelineRunPayload) GetTasks(pr *tkn.PipelineRun) (ts Tasks) {
 		sort.Sort(ts)
 	}
 	log.V(1).WithValues("elements", len(ts)).Info("tasks")
-	return ts
+	return
 }
 
 func (PipelineRunPayload) GetTask(taskRunName string, taskrunStatus *tkn.PipelineRunTaskRunStatus) Task {
@@ -185,8 +191,8 @@ func (PipelineRunPayload) GetTask(taskRunName string, taskrunStatus *tkn.Pipelin
 	status := taskrunStatus.Status
 	st, r := Condition(status.Conditions)
 	steps := GetSteps(*status)
-	log.V(2).Info("trace", "taskrun_name", taskRunName)
-	log.V(2).Info("trace", "task_name", taskrunStatus.PipelineTaskName)
+	log.V(1).Info("trace", "taskrun_name", taskRunName)
+	log.V(1).Info("trace", "task_name", taskrunStatus.PipelineTaskName)
 	return Task{
 		TaskRunName:       taskRunName,
 		Name:              taskrunStatus.PipelineTaskName,

@@ -110,8 +110,8 @@ func (TaskRunPayload) GetTask(taskRun *tkn.TaskRun) Task {
 	if taskName == "" {
 		taskName = taskRun.Spec.TaskRef.Name
 	}
-	log.V(2).Info("trace", "taskrun_name", taskRun.Name)
-	log.V(2).Info("trace", "task_name", taskName)
+	log.V(1).Info("trace", "taskrun_name", taskRun.Name)
+	log.V(1).Info("trace", "task_name", taskName)
 	return Task{
 		TaskRunName:       taskRun.Name,
 		Name:              taskName,

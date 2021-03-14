@@ -54,7 +54,7 @@ func (t *Tekton) GetWatch(kind string, name string) (w watch.Interface) {
 	}
 	switch kind {
 	case "pipelinerun", "pipelineruns":
-		log.V(2).Info("get pipelinerun", "name", name)
+		log.V(1).Info("get pipelinerun", "name", name)
 
 		_, err = cs.Tekton.TektonV1beta1().PipelineRuns(namespace).Get(context.TODO(), name, metav1.GetOptions{})
 		if apierrors.IsNotFound(err) {
@@ -67,7 +67,7 @@ func (t *Tekton) GetWatch(kind string, name string) (w watch.Interface) {
 		}
 		w, err = cs.Tekton.TektonV1beta1().PipelineRuns(namespace).Watch(context.TODO(), opts)
 	case "taskrun", "taskruns":
-		log.V(2).Info("get taskrun", "name", name)
+		log.V(1).Info("get taskrun", "name", name)
 		_, err := cs.Tekton.TektonV1beta1().TaskRuns(namespace).Get(context.TODO(), name, metav1.GetOptions{})
 		if apierrors.IsNotFound(err) {
 			log.V(1).Info("not found")
@@ -79,7 +79,7 @@ func (t *Tekton) GetWatch(kind string, name string) (w watch.Interface) {
 		}
 		w, err = cs.Tekton.TektonV1beta1().TaskRuns(namespace).Watch(context.TODO(), opts)
 	case "po", "pod", "pods":
-		log.V(2).Info("get pod", "name", name)
+		log.V(1).Info("get pod", "name", name)
 		_, err = cs.Kube.CoreV1().Pods(namespace).Get(context.TODO(), name, metav1.GetOptions{})
 		if apierrors.IsNotFound(err) {
 			log.V(1).Info("not found")
@@ -106,51 +106,10 @@ func (t Tasks) Len() int {
 func (t Tasks) Swap(i, j int) {
 	t[i], t[j] = t[j], t[i]
 }
+
+// Less is a sort method
 func (t Tasks) Less(i, j int) bool {
-	if t[j].StartTimeRaw == nil {
-		return false
-	}
-	if t[i].StartTimeRaw == nil {
-		return true
-	}
-	return t[j].StartTimeRaw.Before(t[i].StartTimeRaw)
-}
-
-// GetStatusReason returns a human readable text based on the status of the Condition
-func GetStatusReason(c v1beta1.Conditions) (status string, reason string) {
-	if len(c) == 0 {
-		return "---", ""
-	}
-
-	switch c[0].Status {
-	case corev1.ConditionFalse:
-		status = "Failed"
-	case corev1.ConditionTrue:
-		status = "Succeeded"
-	case corev1.ConditionUnknown:
-		status = "Running"
-	}
-	cStatus := status
-
-	if c[0].Reason != "" && c[0].Reason != status {
-
-		if c[0].Reason == "PipelineRunCancelled" || c[0].Reason == "TaskRunCancelled" {
-			reason = Reason["default"]
-			if _, ok := Reason[strings.ToLower(c[0].Reason)]; ok {
-				reason = Reason[strings.ToLower(c[0].Reason)]
-			}
-			status = "Cancelled"
-		} else if c[0].Reason != status {
-			reason = Reason["default"]
-			if _, ok := Reason[strings.ToLower(c[0].Reason)]; ok {
-				reason = Reason[strings.ToLower(c[0].Reason)]
-			}
-			status = cStatus
-		}
-	} else {
-		status = cStatus
-	}
-	return
+	return t[i].StartTime < t[j].StartTime
 }
 
 // Condition returns a human readable text based on the status of the Condition
@@ -199,10 +158,9 @@ func IsTerminated(c v1beta1.Conditions) bool {
 	switch c[0].Status {
 	case corev1.ConditionFalse, corev1.ConditionTrue:
 		return true
-	case corev1.ConditionUnknown:
+	default:
 		return false
 	}
-	return false
 }
 
 func (t *Tekton) SetParam(params cli.TektonParams) {

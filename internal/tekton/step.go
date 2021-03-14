@@ -16,22 +16,32 @@ Created on 06/02/2021
 */
 package tekton
 
-import tkn "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
+import (
+	tkn "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
+	"strings"
+)
 
 const (
 	pendingState = "---"
 )
 
+var genStepList = []string{
+	"create-dir-builddocker",
+	"git-source",
+	"image-digest-exporter",
+}
+
 func GetSteps(status tkn.TaskRunStatus) (steps []Step) {
 	log := logger.WithName("GetSteps")
 	if (len(status.Steps) != 0 && status.Steps[0].Waiting == nil) &&
 		(status.Steps[0].Terminated != nil || status.Steps[0].Running != nil) {
-		log.V(2).Info("setting")
+		log.V(1).Info("setting")
 		for _, step := range status.Steps {
-			log.V(2).Info("append", "name", step.Name, "status", StepReasonExists(step))
+			log.V(1).Info("append", "name", step.Name, "status", StepReasonExists(step))
 			steps = append(steps, Step{
-				Name:   step.Name,
-				Status: StepReasonExists(step),
+				Name:    FormattedStepName(step.Name),
+				RawName: step.Name,
+				Status:  StepReasonExists(step),
 			})
 		}
 	}
@@ -51,4 +61,15 @@ func StepReasonExists(state tkn.StepState) string {
 		return pendingState
 	}
 	return state.Waiting.Reason
+}
+
+// FormattedStepName ...
+func FormattedStepName(name string) string {
+
+	for _, gen := range genStepList {
+		if strings.HasPrefix(name, gen) {
+			return gen
+		}
+	}
+	return name
 }

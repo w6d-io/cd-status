@@ -68,6 +68,7 @@ type Task struct {
 
 type Step struct {
 	Name    string `json:"name"`
+	RawName string `json:"raw_name"`
 	Status  string `json:"status"`
 	Message string `json:"message"`
 }
