@@ -78,11 +78,12 @@ var _ = Describe("Tekton", func() {
 					Name: "task1",
 				},
 				{
-					Name: "task2",
+					Name:      "task2",
+					StartTime: 1,
 				},
 			}
 			Expect(ts.Len()).To(Equal(2))
-			Expect(ts.Less(0, 1)).To(Equal(false))
+			Expect(ts.Less(0, 1)).To(Equal(true))
 			ts.Swap(0, 1)
 			ts[1].StartTimeRaw = &metav1.Time{
 				Time: time.Now().AddDate(0, 0, -1),

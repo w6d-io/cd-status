@@ -109,12 +109,6 @@ func (t Tasks) Swap(i, j int) {
 
 // Less is a sort method
 func (t Tasks) Less(i, j int) bool {
-	if t[i].StartTimeRaw == nil {
-		return true
-	}
-	if t[j].StartTimeRaw == nil {
-		return false
-	}
 	return t[i].StartTime < t[j].StartTime
 }
 
