@@ -112,43 +112,6 @@ func (t Tasks) Less(i, j int) bool {
 	return t[i].StartTime < t[j].StartTime
 }
 
-// GetStatusReason returns a human readable text based on the status of the Condition
-func GetStatusReason(c v1beta1.Conditions) (status string, reason string) {
-	if len(c) == 0 {
-		return "---", ""
-	}
-
-	switch c[0].Status {
-	case corev1.ConditionFalse:
-		status = "Failed"
-	case corev1.ConditionTrue:
-		status = "Succeeded"
-	case corev1.ConditionUnknown:
-		status = "Running"
-	}
-	cStatus := status
-
-	if c[0].Reason != "" && c[0].Reason != status {
-
-		if c[0].Reason == "PipelineRunCancelled" || c[0].Reason == "TaskRunCancelled" {
-			reason = Reason["default"]
-			if _, ok := Reason[strings.ToLower(c[0].Reason)]; ok {
-				reason = Reason[strings.ToLower(c[0].Reason)]
-			}
-			status = "Cancelled"
-		} else if c[0].Reason != status {
-			reason = Reason["default"]
-			if _, ok := Reason[strings.ToLower(c[0].Reason)]; ok {
-				reason = Reason[strings.ToLower(c[0].Reason)]
-			}
-			status = cStatus
-		}
-	} else {
-		status = cStatus
-	}
-	return
-}
-
 // Condition returns a human readable text based on the status of the Condition
 func Condition(c v1beta1.Conditions) (status string, reason string) {
 	if len(c) == 0 {
@@ -195,10 +158,9 @@ func IsTerminated(c v1beta1.Conditions) bool {
 	switch c[0].Status {
 	case corev1.ConditionFalse, corev1.ConditionTrue:
 		return true
-	case corev1.ConditionUnknown:
+	default:
 		return false
 	}
-	return false
 }
 
 func (t *Tekton) SetParam(params cli.TektonParams) {

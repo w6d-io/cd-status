@@ -1,0 +1,7 @@
+---
+listen: ":8080"
+timeout: 60
+auth:
+  - username: "test"
+    password: "test"
+webhooks: []

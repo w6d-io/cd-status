@@ -131,7 +131,7 @@ func removeWait(logger logr.Logger, wg *sync.WaitGroup) {
 
 func (p *PipelineRunPayload) SetCondition(c v1beta1.Conditions) {
 	logger.V(1).Info("SetCondition")
-	condition, reason := GetStatusReason(c)
+	condition, reason := Condition(c)
 	p.Status = condition
 	p.Message = reason
 }
