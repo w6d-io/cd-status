@@ -45,7 +45,7 @@ func Play(c *gin.Context) {
 		c.JSON(400, gin.H{"status": "error", "message": err.Error()})
 		return
 	}
-	log.V(2).Info("received", "payload", payload)
+	log.V(1).Info("received", "payload", payload)
 	if payload.Object.NamespacedName.Name == "" || payload.Object.NamespacedName.Namespace == "" {
 		c.JSON(401, gin.H{"status": "error", "message": "name or/and namespace missing"})
 		return

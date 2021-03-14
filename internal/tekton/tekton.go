@@ -54,7 +54,7 @@ func (t *Tekton) GetWatch(kind string, name string) (w watch.Interface) {
 	}
 	switch kind {
 	case "pipelinerun", "pipelineruns":
-		log.V(2).Info("get pipelinerun", "name", name)
+		log.V(1).Info("get pipelinerun", "name", name)
 
 		_, err = cs.Tekton.TektonV1beta1().PipelineRuns(namespace).Get(context.TODO(), name, metav1.GetOptions{})
 		if apierrors.IsNotFound(err) {
@@ -67,7 +67,7 @@ func (t *Tekton) GetWatch(kind string, name string) (w watch.Interface) {
 		}
 		w, err = cs.Tekton.TektonV1beta1().PipelineRuns(namespace).Watch(context.TODO(), opts)
 	case "taskrun", "taskruns":
-		log.V(2).Info("get taskrun", "name", name)
+		log.V(1).Info("get taskrun", "name", name)
 		_, err := cs.Tekton.TektonV1beta1().TaskRuns(namespace).Get(context.TODO(), name, metav1.GetOptions{})
 		if apierrors.IsNotFound(err) {
 			log.V(1).Info("not found")
@@ -79,7 +79,7 @@ func (t *Tekton) GetWatch(kind string, name string) (w watch.Interface) {
 		}
 		w, err = cs.Tekton.TektonV1beta1().TaskRuns(namespace).Watch(context.TODO(), opts)
 	case "po", "pod", "pods":
-		log.V(2).Info("get pod", "name", name)
+		log.V(1).Info("get pod", "name", name)
 		_, err = cs.Kube.CoreV1().Pods(namespace).Get(context.TODO(), name, metav1.GetOptions{})
 		if apierrors.IsNotFound(err) {
 			log.V(1).Info("not found")
@@ -106,14 +106,16 @@ func (t Tasks) Len() int {
 func (t Tasks) Swap(i, j int) {
 	t[i], t[j] = t[j], t[i]
 }
+
+// Less is a sort method
 func (t Tasks) Less(i, j int) bool {
-	if t[j].StartTimeRaw == nil {
-		return false
-	}
 	if t[i].StartTimeRaw == nil {
 		return true
 	}
-	return t[j].StartTimeRaw.Before(t[i].StartTimeRaw)
+	if t[j].StartTimeRaw == nil {
+		return false
+	}
+	return t[i].StartTime < t[j].StartTime
 }
 
 // GetStatusReason returns a human readable text based on the status of the Condition
