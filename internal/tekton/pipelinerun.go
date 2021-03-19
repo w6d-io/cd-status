@@ -19,19 +19,17 @@ package tekton
 import (
 	"context"
 	"fmt"
-	"github.com/tektoncd/cli/pkg/formatted"
-	"github.com/w6d-io/ci-status/internal/util"
-	"github.com/w6d-io/ci-status/pkg/hook"
-	"k8s.io/apimachinery/pkg/types"
-	"knative.dev/pkg/apis/duck/v1beta1"
 	"sort"
-	"sync"
 	"time"
 
 	tkn "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
 
-	"github.com/go-logr/logr"
+	"github.com/tektoncd/cli/pkg/formatted"
 	"github.com/w6d-io/ci-status/internal/config"
+	"github.com/w6d-io/ci-status/internal/util"
+	"github.com/w6d-io/hook"
+	"k8s.io/apimachinery/pkg/types"
+	"knative.dev/pkg/apis/duck/v1beta1"
 )
 
 // PipelineRunSupervise watches all pod event created by pipelinerun
@@ -61,7 +59,7 @@ func (t *Tekton) PipelineRunSupervise() error {
 			if e.Object == nil {
 				log.Info("timeout")
 				t.PipelineRun.Status = "timeout"
-				if err := hook.Send(t.PipelineRun, t.Log); err != nil {
+				if err := hook.Send(t.PipelineRun, t.Log, "timeout"); err != nil {
 					log.Error(err, "hook failed")
 					return err
 				}
@@ -75,7 +73,7 @@ func (t *Tekton) PipelineRunSupervise() error {
 			t.SupTasks(pr)
 			if IsTerminated(pr.Status.Conditions) {
 				t.PipelineRun.CompletionTime = util.UnixMilli(pr.Status.CompletionTime)
-				if err := hook.Send(t.PipelineRun, t.Log); err != nil {
+				if err := hook.Send(t.PipelineRun, t.Log, "end"); err != nil {
 					log.Error(err, "hook failed")
 					return err
 				}
@@ -90,7 +88,7 @@ func (t *Tekton) SupTasks(pr *tkn.PipelineRun) {
 	log := t.Log.WithName("SupTasks").WithValues("object", t.PipelineRun.NamespacedName.String())
 	defer log.V(1).Info("SupTasks finished")
 	t.PipelineRun.SetCondition(pr.Status.Conditions)
-	if err := hook.Send(t.PipelineRun, t.Log); err != nil {
+	if err := hook.Send(t.PipelineRun, t.Log, "update"); err != nil {
 		log.Error(err, "hook failed")
 	}
 	currentTask := make(map[string]bool)
@@ -124,10 +122,10 @@ func (t *Tekton) SupTasks(pr *tkn.PipelineRun) {
 	//wg.Wait()
 }
 
-func removeWait(logger logr.Logger, wg *sync.WaitGroup) {
-	logger.V(1).Info("remove wait")
-	wg.Done()
-}
+// func removeWait(logger logr.Logger, wg *sync.WaitGroup) {
+// 	logger.V(1).Info("remove wait")
+// 	wg.Done()
+// }
 
 func (p *PipelineRunPayload) SetCondition(c v1beta1.Conditions) {
 	logger.V(1).Info("SetCondition")

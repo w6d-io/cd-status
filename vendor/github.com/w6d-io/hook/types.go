@@ -12,19 +12,32 @@ distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
-Created on 08/02/2021
+Created on 07/02/2021
 */
-package hook_test
+package hook
 
 import (
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
+	"k8s.io/klog/klogr"
+	"net/url"
 )
 
-var _ = Describe("Hook", func() {
-	Context("", func() {
-		It("", func() {
-			Expect("").To(Equal(""))
-		})
-	})
-})
+type Hook struct{}
+
+type Interface interface {
+	Send(interface{}, *url.URL) error
+	Validate(*url.URL) error
+}
+
+var (
+	suppliers   = make(providers)
+	subscribers []subscriber
+
+	logger = klogr.New()
+)
+
+type providers map[string]Interface
+
+type subscriber struct {
+	URL   *url.URL
+	Scope string
+}

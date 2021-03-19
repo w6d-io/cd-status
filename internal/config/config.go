@@ -18,18 +18,12 @@ Created on 22/01/2021
 package config
 
 import (
-	"errors"
-	"fmt"
+	"github.com/w6d-io/hook"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
-	"net/url"
 	"time"
 
 	ctrl "sigs.k8s.io/controller-runtime"
-)
-
-var (
-	WHSupport = []string{"kafka", "http", "https"}
 )
 
 func New(filename string) error {
@@ -46,23 +40,10 @@ func New(filename string) error {
 		log.Error(err, "Error unmarshal the configuration")
 		return err
 	}
-	for i, wh := range config.Webhooks {
-		if wh.URLRaw != "" {
-			config.Webhooks[i].URL, err = url.Parse(wh.URLRaw)
-			if err != nil {
-				log.Error(err, "url "+wh.URLRaw+" parse failed")
-				return err
-			}
-			if !IsInArray(config.Webhooks[i].URL.Scheme, WHSupport) {
-				return fmt.Errorf("scheme %v not supported", config.Webhooks[i].URL.Scheme)
-			}
-			if config.Webhooks[i].URL.Scheme == "kafka" {
-				values := config.Webhooks[i].URL.Query()
-				if _, ok := values["topic"]; !ok {
-					log.Error(errors.New("missing topic"), wh.URLRaw)
-					return errors.New("missing topic")
-				}
-			}
+	for _, wh := range config.Hooks {
+		if err := hook.Subscribe(wh.URL, wh.Scope); err != nil {
+			log.Error(err, "hook subscription failed")
+			return err
 		}
 	}
 	if config.Timeout == 0 {
@@ -108,11 +89,6 @@ func SetAuth(auth []Auth) {
 // GetAuth return the auth list from config
 func GetAuth() []Auth {
 	return config.Auth
-}
-
-// GetWebhook returns the list of webhook
-func GetWebhooks() []Webhook {
-	return config.Webhooks
 }
 
 // IsInArray checks if the needle in part of haystack

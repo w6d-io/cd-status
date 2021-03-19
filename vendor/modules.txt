@@ -238,6 +238,11 @@ github.com/tektoncd/triggers/pkg/client/clientset/versioned/scheme
 github.com/tektoncd/triggers/pkg/client/clientset/versioned/typed/triggers/v1alpha1
 # github.com/ugorji/go/codec v1.1.7
 github.com/ugorji/go/codec
+# github.com/w6d-io/hook v0.1.2
+## explicit
+github.com/w6d-io/hook
+github.com/w6d-io/hook/http
+github.com/w6d-io/hook/kafka
 # go.uber.org/atomic v1.7.0
 go.uber.org/atomic
 # go.uber.org/multierr v1.5.0
@@ -540,6 +545,9 @@ k8s.io/client-go/util/workqueue
 # k8s.io/component-base v0.20.2
 k8s.io/component-base/config
 k8s.io/component-base/config/v1alpha1
+# k8s.io/klog v1.0.0
+k8s.io/klog
+k8s.io/klog/klogr
 # k8s.io/klog/v2 v2.5.0
 k8s.io/klog/v2
 # k8s.io/kube-openapi v0.0.0-20210113233702-8566a335510f

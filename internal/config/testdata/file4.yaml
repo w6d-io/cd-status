@@ -2,6 +2,8 @@
 auth:
   - username: test
     password: test
-webhooks:
+hooks:
   - url: kafka://localhost:9092?topic=MONITORING
+    scope: ".*"
   - url: "{ }:/localhost:8001/test"
+    scope: "ee"

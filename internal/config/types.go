@@ -17,8 +17,6 @@ Created on 22/01/2021
 
 package config
 
-import "net/url"
-
 type Config struct {
 	// Listen address binding the api
 	Listen string `json:"listen"   yaml:"listen"`
@@ -30,11 +28,11 @@ type Config struct {
 	// it should be content the username and password
 	Auth []Auth `json:"auth"     yaml:"auth"`
 
-	// Webhooks is a list of subscriber where to send the status
+	// Hooks is a list of subscriber where to send the status
 	// it should be respect the url format
 	// example for kafka :
 	// kafka://localhost:9092?topic=MY-TOPIC
-	Webhooks []Webhook `json:"webhooks" yaml:"webhooks"`
+	Hooks []Hook `json:"hooks" yaml:"hooks"`
 }
 
 type Auth struct {
@@ -42,10 +40,9 @@ type Auth struct {
 	Password string `json:"password" yaml:"password"`
 }
 
-type Webhook struct {
-	Type   string   `json:"type" yaml:"type"`
-	URLRaw string   `json:"url"  yaml:"url"`
-	URL    *url.URL `json:"-"    yaml:"-"`
+type Hook struct {
+	URL   string `json:"url"  yaml:"url"`
+	Scope string `json:"scope" yaml:"scope"`
 }
 
 var config = new(Config)

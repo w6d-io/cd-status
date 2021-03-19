@@ -1455,6 +1455,7 @@ github.com/stretchr/testify v1.3.0/go.mod h1:M5WIy9Dh21IEIfnGCwXGc5bZfKNJtfHm1UV
 github.com/stretchr/testify v1.4.0/go.mod h1:j7eGeouHqKxXV5pUuKE4zz7dFj8WfuZ+81PSLYec5m4=
 github.com/stretchr/testify v1.5.1/go.mod h1:5W2xD1RspED5o8YsWQXVCued0rvSQ+mT+I5cxcmMvtA=
 github.com/stretchr/testify v1.6.1/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/h/Wwjteg=
+github.com/stretchr/testify v1.7.0/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/h/Wwjteg=
 github.com/subosito/gotenv v1.2.0/go.mod h1:N0PQaV/YGNqwC0u51sEeR/aUtSLEXKX9iv69rRypqCw=
 github.com/syndtr/gocapability v0.0.0-20170704070218-db04d3cc01c8/go.mod h1:hkRG7XYTFWNJGYcbNJQlaLq0fg1yr4J4t/NcTQtrfww=
 github.com/tdakkota/asciicheck v0.0.0-20200416190851-d7f85be797a2/go.mod h1:yHp0ai0Z9gUljN3o0xMhYJnH/IcvkdTBOX2fmJ93JEM=
@@ -1544,6 +1545,10 @@ github.com/vdemeester/k8s-pkg-credentialprovider v1.18.1-0.20201019120933-f1d169
 github.com/vdemeester/k8s-pkg-credentialprovider v1.19.7/go.mod h1:K2nMO14cgZitdwBqdQps9tInJgcaXcU/7q5F59lpbNI=
 github.com/vektah/gqlparser v1.1.2/go.mod h1:1ycwN7Ij5njmMkPPAOaRFY4rET2Enx7IkVv3vaXspKw=
 github.com/vmware/govmomi v0.20.3/go.mod h1:URlwyTFZX72RmxtxuaFL2Uj3fD1JTvZdx59bHWk6aFU=
+github.com/w6d-io/hook v0.1.1 h1:NhMuCjm+KNhUMV5QwMdiTRoaFcbUoncSLCRGpdw5rrE=
+github.com/w6d-io/hook v0.1.1/go.mod h1:5/kk5mdYvBwhJwTCgmtlEThR4bF7QLsvv1vLIEA1FPk=
+github.com/w6d-io/hook v0.1.2 h1:3sVVAaGSn3WcwSV1Sbg66yuTI+WaQgt9Yc8daAm44wE=
+github.com/w6d-io/hook v0.1.2/go.mod h1:5/kk5mdYvBwhJwTCgmtlEThR4bF7QLsvv1vLIEA1FPk=
 github.com/xanzy/go-gitlab v0.31.0/go.mod h1:sPLojNBn68fMUWSxIJtdVVIP8uSBYqesTfDUseX11Ug=
 github.com/xanzy/go-gitlab v0.32.0/go.mod h1:sPLojNBn68fMUWSxIJtdVVIP8uSBYqesTfDUseX11Ug=
 github.com/xanzy/ssh-agent v0.2.1/go.mod h1:mLlQY/MoOhWBj+gOGMQkOeiEvkx+8pJSI+0Bx9h2kr4=

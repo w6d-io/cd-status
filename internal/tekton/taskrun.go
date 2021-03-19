@@ -21,12 +21,12 @@ import (
 	"fmt"
 	"github.com/tektoncd/cli/pkg/formatted"
 	"github.com/w6d-io/ci-status/internal/util"
+	"github.com/w6d-io/hook"
 	"time"
 
 	tkn "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
 
 	"github.com/w6d-io/ci-status/internal/config"
-	"github.com/w6d-io/ci-status/pkg/hook"
 	"k8s.io/apimachinery/pkg/types"
 )
 
@@ -67,7 +67,7 @@ func (t *Tekton) TaskRunSupervise(nn types.NamespacedName) error {
 			if e.Object == nil {
 				log.Info("timeout")
 				t.PipelineRun.Status = "timeout"
-				if err := hook.Send(t.PipelineRun, t.Log); err != nil {
+				if err := hook.Send(t.PipelineRun, t.Log, "timeout"); err != nil {
 					log.Error(err, "hook failed")
 					return err
 				}
@@ -76,7 +76,7 @@ func (t *Tekton) TaskRunSupervise(nn types.NamespacedName) error {
 			tr := e.Object.(*tkn.TaskRun)
 			t.UpdatePayloadTask(trp.GetTask(tr))
 
-			if err := hook.Send(t.PipelineRun, t.Log); err != nil {
+			if err := hook.Send(t.PipelineRun, t.Log, "update"); err != nil {
 				log.Error(err, "hook failed")
 				return err
 			}

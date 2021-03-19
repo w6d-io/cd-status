@@ -2,7 +2,8 @@
 auth:
   - username: test
     password: test
-webhooks:
+hooks:
   - url: kafka://localhost:9092
+    scope: ".*"
   - url: http://localhost:8001/test
-  - url: http://localhost:8001/test
+    scope: "end"

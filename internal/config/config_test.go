@@ -5,6 +5,7 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/w6d-io/ci-status/internal/config"
+	"time"
 )
 
 var _ = Describe("Config", func() {
@@ -23,10 +24,6 @@ var _ = Describe("Config", func() {
 			It("webhook bad entry", func() {
 				Expect(config.New("testdata/file4.yaml").Error()).
 					Should(ContainSubstring("first path segment in URL cannot contain colon"))
-			})
-			It("webhook does not support", func() {
-				Expect(config.New("testdata/file5.yaml").Error()).
-					Should(ContainSubstring("scheme mongodb not supported"))
 			})
 		})
 		Context("Validate config", func() {
@@ -47,15 +44,20 @@ var _ = Describe("Config", func() {
 				config.SetAuth([]config.Auth{{"test", "test"}})
 				Expect(config.GetAuth()).To(Equal([]config.Auth{{"test", "test"}}))
 			})
-			It("get webhooks", func() {
-				Expect(len(config.GetWebhooks())).To(Equal(2))
-			})
 		})
 	})
 	Describe("check tools", func() {
-		It("check is in array", func() {
+		It("check is  not in array", func() {
 			haystack := []string{"test1", "test2"}
 			Expect(config.IsInArray("test3", haystack)).To(Equal(false))
+		})
+		It("check is in array", func() {
+			haystack := []string{"test1", "test2"}
+			Expect(config.IsInArray("test2", haystack)).To(Equal(true))
+		})
+		It("get timeout", func() {
+			config.SetTimeout(10)
+			Expect(config.GetTimeout()).To(Equal(time.Duration(10) * time.Minute))
 		})
 	})
 })

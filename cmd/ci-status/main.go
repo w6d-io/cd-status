@@ -22,7 +22,7 @@ import (
 	"flag"
 	"fmt"
 	"github.com/w6d-io/ci-status/pkg/handler"
-	"github.com/w6d-io/ci-status/pkg/hook"
+	"github.com/w6d-io/hook"
 	"os"
 
 	zapraw "go.uber.org/zap"
