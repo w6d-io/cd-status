@@ -1,4 +1,4 @@
-# Build the ci-operator binary
+# Build the ci-status binary
 ARG GOVERSION=1.15.5
 FROM golang:$GOVERSION as builder
 ARG GOVERSION=1.15.5
