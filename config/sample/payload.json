@@ -1,0 +1,21 @@
+{
+  "object": {
+    "kind": "pipelinerun",
+    "namespaced_name": {
+      "name": "pipelinerun-7526775-1",
+      "namespace": "ci-7526775"
+    }
+  },
+  "project_id": 7526775,
+  "pipeline_id": 1,
+  "repo_url": "https://github.com/w6d-io/nodejs-sample",
+  "commit": {
+    "sha": "4ab410ff384b186222f539170c5a83ae275d65b9",
+    "ref": "main"
+  },
+  "stack": {
+    "language": "js",
+    "package": "yarn"
+  },
+  "status": "ok"
+}
