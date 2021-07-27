@@ -15,7 +15,7 @@ replace (
 require (
 	github.com/avast/retry-go v3.0.0+incompatible
 	github.com/confluentinc/confluent-kafka-go v1.5.2 // indirect
-	github.com/gin-gonic/gin v1.6.3
+	github.com/gin-gonic/gin v1.7.2
 	github.com/go-logr/logr v0.4.0
 	github.com/go-logr/zapr v0.4.0 // indirect
 	github.com/google/uuid v1.2.0
