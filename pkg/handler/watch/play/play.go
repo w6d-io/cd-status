@@ -23,6 +23,7 @@ import (
 	"github.com/w6d-io/ci-status/pkg/handler/watch/play/pipelinerun"
 	"github.com/w6d-io/ci-status/pkg/router"
 	"k8s.io/apimachinery/pkg/types"
+	"net/http"
 	ctrl "sigs.k8s.io/controller-runtime"
 
 	"github.com/gin-gonic/gin"
@@ -40,9 +41,14 @@ func init() {
 // Play gets the play payload and determine the resource to scan
 func Play(c *gin.Context) {
 	log := logger.WithName("Play")
+	var payload Payload
 	if err := c.BindJSON(&payload); err != nil {
 		log.Error(err, "BindJSON")
 		c.JSON(400, gin.H{"status": "error", "message": err.Error()})
+		return
+	}
+	if payload.Object == nil {
+		c.JSON(http.StatusBadRequest, gin.H{"status": "error", "message": "bad request"})
 		return
 	}
 	log.V(1).Info("received", "payload", payload)
