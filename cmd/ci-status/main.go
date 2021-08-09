@@ -74,7 +74,7 @@ func main() {
 
 	opts.Development = os.Getenv("RELEASE") != "prod"
 	opts.StacktraceLevel = zapcore.PanicLevel
-	ctrl.SetLogger(zap.New(zap.UseFlagOptions(&opts), zap.RawZapOpts(zapraw.AddCaller())))
+	ctrl.SetLogger(zap.New(zap.UseFlagOptions(&opts), zap.RawZapOpts(zapraw.AddCaller(), zapraw.AddCallerSkip(-1))))
 
 	setupLog.Info("starting ci-status", "Version", Version, "Built",
 		Built, "Revision", Revision, "Arch", OsArch, "GoVersion", GoVersion)

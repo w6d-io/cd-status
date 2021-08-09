@@ -65,8 +65,8 @@ type Interface interface {
 }
 
 var (
-	scans   = make(map[string]func(logr.Logger, types.NamespacedName, int64, int64, string, string, string, string) error)
-	scan    func(logr.Logger, types.NamespacedName, int64, int64, string, string, string, string) error
-	payload Payload
-	ok      bool
+	scans = make(map[string]func(logr.Logger, types.NamespacedName, int64, int64, string, string, string, string) error)
+	scan  func(logr.Logger, types.NamespacedName, int64, int64, string, string, string, string) error
+
+	ok bool
 )
