@@ -56,6 +56,23 @@ var _ = Describe("Watch", func() {
 					play.Play(c)
 					Expect(c.Writer.Status()).To(Equal(200))
 				})
+				It("failed on object", func() {
+					payload = `
+{
+  "project_id": 1,
+  "pipeline_id": 1,
+  "repo_url": " https://github.com/w6d-io/nodejs-sample.git"
+}
+`
+					r := ioutil.NopCloser(strings.NewReader(payload))
+					w := httptest.NewRecorder()
+					c, _ := gin.CreateTestContext(w)
+					c.Request = &http.Request{
+						Body: framer.NewJSONFramedReader(r),
+					}
+					play.Play(c)
+					Expect(c.Writer.Status()).To(Equal(http.StatusBadRequest))
+				})
 				It("scan failed", func() {
 					payload = `
 {
@@ -117,7 +134,10 @@ var _ = Describe("Watch", func() {
 {
   "object": {
     "kind": "toto",
-    "name": "pipeline-run-1-1"
+	"namespaced_name": {
+      "name": "pipeline-run-1-1",
+      "namespace": "p6e-cx-1"
+    }
   },
   "project_id": 1,
   "pipeline_id": 1,
@@ -141,7 +161,10 @@ var _ = Describe("Watch", func() {
 {
   "object": {
     "kind": "pipelinerun",
-    "name": "pipeline-run-1-1"
+	"namespaced_name": {
+      "name": "pipeline-run-1-1",
+      "namespace": "p6e-cx-1"
+    }
   },
   "project_id": 1,
   "pipeline_id": 1,
