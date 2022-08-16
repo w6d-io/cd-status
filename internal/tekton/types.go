@@ -26,10 +26,10 @@ import (
 )
 
 type Tekton struct {
-	ProjectID   int64              `json:"project_id"`
-	PipelineID  int64              `json:"pipeline_id"`
-	PipelineRun PipelineRunPayload `json:"pipeline_run"`
-	Log         logr.Logger        `json:"-"`
+	ProjectID   int64               `json:"project_id"`
+	EventID     int64               `json:"eventId"`
+	PipelineRun *PipelineRunPayload `json:"pipeline_run"`
+	Log         logr.Logger         `json:"-"`
 }
 
 type PipelineRunPayload struct {

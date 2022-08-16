@@ -14,40 +14,34 @@ See the License for the specific language governing permissions and
 limitations under the License.
 Created on 24/01/2021
 */
+
 package pipelinerun
 
 import (
+	"time"
+
 	"github.com/avast/retry-go"
 	"github.com/go-logr/logr"
-	"github.com/w6d-io/ci-status/internal/tekton"
 	"k8s.io/apimachinery/pkg/types"
-	"time"
+
+	"github.com/w6d-io/ci-status/internal/tekton"
 )
 
 const KIND = "pipelinerun"
 
 // Scan stars the scan of pipeline run tekton resource
-func Scan(logger logr.Logger, nn types.NamespacedName, projectID int64, pipelineID int64,
-	commitID, commitMsg, branch, repo string) error {
+func Scan(logger logr.Logger, nn types.NamespacedName, projectID int64, eventId int64,
+	payload *tekton.PipelineRunPayload) error {
 	log := logger.WithName("Scan").WithValues("kind", "pipelinerun").
 		WithValues("name", nn)
 	log.V(1).Info("start")
 	defer log.V(1).Info("stop")
 	if err := retry.Do(func() error {
 		t := &tekton.Tekton{
-			ProjectID:  projectID,
-			PipelineID: pipelineID,
-			Log:        logger,
-			PipelineRun: tekton.PipelineRunPayload{
-				NamespacedName: types.NamespacedName{
-					Name:      nn.Name,
-					Namespace: nn.Namespace,
-				},
-				CommitID:  commitID,
-				CommitMsg: commitMsg,
-				Branch:    branch,
-				RepoURL:   repo,
-			},
+			ProjectID:   projectID,
+			EventID:     eventId,
+			Log:         logger,
+			PipelineRun: payload,
 		}
 		if err := t.PipelineRunSupervise(); err != nil {
 			return err

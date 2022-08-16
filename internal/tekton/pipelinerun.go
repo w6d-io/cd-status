@@ -14,6 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 Created on 24/01/2021
 */
+
 package tekton
 
 import (
@@ -59,7 +60,7 @@ func (t *Tekton) PipelineRunSupervise() error {
 			if e.Object == nil {
 				log.Info("timeout")
 				t.PipelineRun.Status = "timeout"
-				if err := hook.Send(t.PipelineRun, t.Log, "timeout"); err != nil {
+				if err := hook.Send(ctx, t.PipelineRun, "timeout"); err != nil {
 					log.Error(err, "hook failed")
 					return err
 				}
@@ -67,13 +68,13 @@ func (t *Tekton) PipelineRunSupervise() error {
 			}
 			log.V(1).Info("start sub tasks")
 			pr := e.Object.(*tkn.PipelineRun)
-			t.PipelineRun.ProjectID = t.ProjectID
-			t.PipelineRun.PipelineID = t.PipelineID
-			t.PipelineRun.StartTime = util.UnixMilli(pr.Status.StartTime)
+			//t.PipelineRun.ProjectID = t.ProjectID
+			//t.PipelineRun.PipelineID = t.PipelineID
+			//t.PipelineRun.StartTime = util.UnixMilli(pr.Status.StartTime)
 			t.SupTasks(pr)
 			if IsTerminated(pr.Status.Conditions) {
 				t.PipelineRun.CompletionTime = util.UnixMilli(pr.Status.CompletionTime)
-				if err := hook.Send(t.PipelineRun, t.Log, "end"); err != nil {
+				if err := hook.Send(ctx, t.PipelineRun, "end"); err != nil {
 					log.Error(err, "hook failed")
 					return err
 				}
@@ -88,7 +89,7 @@ func (t *Tekton) SupTasks(pr *tkn.PipelineRun) {
 	log := t.Log.WithName("SupTasks").WithValues("object", t.PipelineRun.NamespacedName.String())
 	defer log.V(1).Info("SupTasks finished")
 	t.PipelineRun.SetCondition(pr.Status.Conditions)
-	if err := hook.Send(t.PipelineRun, t.Log, "update"); err != nil {
+	if err := hook.Send(context.Background(), t.PipelineRun, "update"); err != nil {
 		log.Error(err, "hook failed")
 	}
 	currentTask := make(map[string]bool)
@@ -121,11 +122,6 @@ func (t *Tekton) SupTasks(pr *tkn.PipelineRun) {
 	}
 	//wg.Wait()
 }
-
-// func removeWait(logger logr.Logger, wg *sync.WaitGroup) {
-// 	logger.V(1).Info("remove wait")
-// 	wg.Done()
-// }
 
 func (p *PipelineRunPayload) SetCondition(c v1beta1.Conditions) {
 	logger.V(1).Info("SetCondition")

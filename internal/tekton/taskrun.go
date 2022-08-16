@@ -30,7 +30,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 )
 
-// PipelineRunSupervise watches all pod event created by pipelinerun
+// TaskRunSupervise watches all pod event created by taskrun
 func (t *Tekton) TaskRunSupervise(nn types.NamespacedName) error {
 	log := t.Log.WithName("TaskRunSupervise").WithValues("object",
 		t.PipelineRun.NamespacedName.String(),
@@ -67,7 +67,7 @@ func (t *Tekton) TaskRunSupervise(nn types.NamespacedName) error {
 			if e.Object == nil {
 				log.Info("timeout")
 				t.PipelineRun.Status = "timeout"
-				if err := hook.Send(t.PipelineRun, t.Log, "timeout"); err != nil {
+				if err := hook.Send(ctx, t.PipelineRun, "timeout"); err != nil {
 					log.Error(err, "hook failed")
 					return err
 				}
@@ -76,7 +76,7 @@ func (t *Tekton) TaskRunSupervise(nn types.NamespacedName) error {
 			tr := e.Object.(*tkn.TaskRun)
 			t.UpdatePayloadTask(trp.GetTask(tr))
 
-			if err := hook.Send(t.PipelineRun, t.Log, "update"); err != nil {
+			if err := hook.Send(ctx, t.PipelineRun, "update"); err != nil {
 				log.Error(err, "hook failed")
 				return err
 			}

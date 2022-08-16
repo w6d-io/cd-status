@@ -35,7 +35,7 @@ var _ = Describe("Tekton", func() {
 		When("resource does not exist", func() {
 			It("returns nil for pods", func() {
 				t := &tekton.Tekton{
-					PipelineRun: tekton.PipelineRunPayload{
+					PipelineRun: &tekton.PipelineRunPayload{
 						NamespacedName: types.NamespacedName{
 							Name:      "pod-test-1-1",
 							Namespace: "default",
@@ -50,7 +50,7 @@ var _ = Describe("Tekton", func() {
 		When("resource does not exist", func() {
 			It("returns nil for pods", func() {
 				t := &tekton.Tekton{
-					PipelineRun: tekton.PipelineRunPayload{
+					PipelineRun: &tekton.PipelineRunPayload{
 						NamespacedName: types.NamespacedName{
 							Name:      "pod-test-1-1",
 							Namespace: "default",

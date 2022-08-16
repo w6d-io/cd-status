@@ -3,6 +3,7 @@ package play_test
 import (
 	"errors"
 	"github.com/go-logr/logr"
+	"github.com/w6d-io/ci-status/internal/tekton"
 	"github.com/w6d-io/ci-status/pkg/handler/watch/play"
 	"io/ioutil"
 	"k8s.io/apimachinery/pkg/types"
@@ -43,7 +44,7 @@ var _ = Describe("Watch", func() {
   "repo_url": " https://github.com/w6d-io/nodejs-sample.git"
 }
 `
-					f := func(_ logr.Logger, _ types.NamespacedName, _ int64, _ int64, _ string, _ string, _ string, _ string) error {
+					f := func(_ logr.Logger, _ types.NamespacedName, _ int64, _ int64, _ *tekton.PipelineRunPayload) error {
 						return nil
 					}
 					play.AddWatcher("test", f)
@@ -88,7 +89,7 @@ var _ = Describe("Watch", func() {
   "repo_url": " https://github.com/w6d-io/nodejs-sample.git"
 }
 `
-					f := func(_ logr.Logger, _ types.NamespacedName, _ int64, _ int64, _ string, _ string, _ string, _ string) error {
+					f := func(_ logr.Logger, _ types.NamespacedName, _ int64, _ int64, _ *tekton.PipelineRunPayload) error {
 						return errors.New("test")
 					}
 					play.AddWatcher("test", f)
@@ -117,7 +118,7 @@ var _ = Describe("Watch", func() {
   "pipeline_id": 1,
   "repo_url": " https://github.com/w6d-io/nodejs-sample.git",
 `
-					f := func(_ logr.Logger, _ types.NamespacedName, _ int64, _ int64, _ string, _ string, _ string, _ string) error {
+					f := func(_ logr.Logger, _ types.NamespacedName, _ int64, _ int64, _ *tekton.PipelineRunPayload) error {
 						return nil
 					}
 					play.AddWatcher("test", f)
@@ -144,7 +145,7 @@ var _ = Describe("Watch", func() {
   "repo_url": " https://github.com/w6d-io/nodejs-sample.git"
 }
 `
-					f := func(_ logr.Logger, _ types.NamespacedName, _ int64, _ int64, _ string, _ string, _ string, _ string) error {
+					f := func(_ logr.Logger, _ types.NamespacedName, _ int64, _ int64, _ *tekton.PipelineRunPayload) error {
 						return nil
 					}
 					play.AddWatcher("test", f)
@@ -171,7 +172,7 @@ var _ = Describe("Watch", func() {
   "repo_url": " https://github.com/w6d-io/nodejs-sample.git"
 }
 `
-					f := func(_ logr.Logger, _ types.NamespacedName, _ int64, _ int64, _ string, _ string, _ string, _ string) error {
+					f := func(_ logr.Logger, _ types.NamespacedName, _ int64, _ int64, _ *tekton.PipelineRunPayload) error {
 						return errors.New("test")
 					}
 					play.AddWatcher("test", f)
@@ -198,7 +199,7 @@ var _ = Describe("Watch", func() {
   "repo_url": " https://github.com/w6d-io/nodejs-sample.git"
 }
 `
-					f := func(_ logr.Logger, _ types.NamespacedName, _ int64, _ int64, _ string, _ string, _ string, _ string) error {
+					f := func(_ logr.Logger, _ types.NamespacedName, _ int64, _ int64, _ *tekton.PipelineRunPayload) error {
 						return nil
 					}
 					play.AddWatcher("test", f)

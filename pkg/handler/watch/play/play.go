@@ -14,19 +14,22 @@ See the License for the specific language governing permissions and
 limitations under the License.
 Created on 24/01/2021
 */
+
 package play
 
 import (
 	"errors"
+	"github.com/w6d-io/ci-status/internal/tekton"
+	"net/http"
+
+	"github.com/gin-gonic/gin"
 	"github.com/go-logr/logr"
+	"k8s.io/apimachinery/pkg/types"
+	ctrl "sigs.k8s.io/controller-runtime"
+
 	"github.com/w6d-io/ci-status/internal/config"
 	"github.com/w6d-io/ci-status/pkg/handler/watch/play/pipelinerun"
 	"github.com/w6d-io/ci-status/pkg/router"
-	"k8s.io/apimachinery/pkg/types"
-	"net/http"
-	ctrl "sigs.k8s.io/controller-runtime"
-
-	"github.com/gin-gonic/gin"
 )
 
 var (
@@ -63,22 +66,20 @@ func Play(c *gin.Context) {
 		return
 	}
 
-	go func(kind string, nn types.NamespacedName, projectID, pipelineID int64) {
+	go func(kind string, nn types.NamespacedName, projectID, eventID int64, payload *tekton.PipelineRunPayload) {
 		corId := c.Writer.Header().Get(config.CorrelationId)
 		scanLog := ctrl.Log.WithValues("correlation_id", corId, "kind", kind)
-		err := scan(scanLog, nn, projectID, pipelineID,
-			payload.Commit.SHA, payload.Commit.Message, payload.Commit.Ref,
-			payload.RepoURL)
+		err := scan(scanLog, nn, projectID, eventID, payload)
 		if err != nil {
 			scanLog.Error(err, "Scan resource")
 			//c.JSON(403, gin.H{"status": "error", "message": "scan resource failed"})
 			return
 		}
-	}(payload.Object.Kind, payload.Object.NamespacedName, payload.ProjectID, payload.PipelineID)
+	}(payload.Object.Kind, payload.Object.NamespacedName, payload.ProjectID, payload.EventID, payload.Payload)
 	c.JSON(200, gin.H{"status": "ok", "message": "scan launched"})
 }
 
 // AddWatcher inserts method to scans map
-func AddWatcher(name string, f func(logr.Logger, types.NamespacedName, int64, int64, string, string, string, string) error) {
+func AddWatcher(name string, f func(logr.Logger, types.NamespacedName, int64, int64, *tekton.PipelineRunPayload) error) {
 	scans[name] = f
 }

@@ -18,10 +18,12 @@ Created on 22/01/2021
 package config
 
 import (
-	"github.com/w6d-io/hook"
-	"gopkg.in/yaml.v2"
+	"context"
 	"io/ioutil"
 	"time"
+
+	"github.com/w6d-io/hook"
+	"gopkg.in/yaml.v2"
 
 	ctrl "sigs.k8s.io/controller-runtime"
 )
@@ -41,7 +43,7 @@ func New(filename string) error {
 		return err
 	}
 	for _, wh := range config.Hooks {
-		if err := hook.Subscribe(wh.URL, wh.Scope); err != nil {
+		if err := hook.Subscribe(context.Background(), wh.URL, wh.Scope); err != nil {
 			log.Error(err, "hook subscription failed")
 			return err
 		}

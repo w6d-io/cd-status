@@ -41,7 +41,7 @@ var _ = Describe("Tekton", func() {
 				err = createPipelineRun("pod-test-1-1")
 				Expect(err).NotTo(Succeed())
 				t := &tekton.Tekton{
-					PipelineRun: tekton.PipelineRunPayload{
+					PipelineRun: &tekton.PipelineRunPayload{
 						NamespacedName: types.NamespacedName{
 							Name:      "pod-test-1-1",
 							Namespace: "default",
@@ -60,7 +60,7 @@ var _ = Describe("Tekton", func() {
 		When("resource does not exist", func() {
 			It("returns nil for pods", func() {
 				t := &tekton.Tekton{
-					PipelineRun: tekton.PipelineRunPayload{
+					PipelineRun: &tekton.PipelineRunPayload{
 						NamespacedName: types.NamespacedName{
 							Name:      "pod-test-1-1",
 							Namespace: "default",
@@ -71,7 +71,7 @@ var _ = Describe("Tekton", func() {
 			})
 			It("returns nil for pipelineruns", func() {
 				t := &tekton.Tekton{
-					PipelineRun: tekton.PipelineRunPayload{
+					PipelineRun: &tekton.PipelineRunPayload{
 						NamespacedName: types.NamespacedName{
 							Name:      "pipeline-run-test-1-1",
 							Namespace: "default",
@@ -82,7 +82,7 @@ var _ = Describe("Tekton", func() {
 			})
 			It("returns not nil for taskruns", func() {
 				t := &tekton.Tekton{
-					PipelineRun: tekton.PipelineRunPayload{
+					PipelineRun: &tekton.PipelineRunPayload{
 						NamespacedName: types.NamespacedName{
 							Name:      "taskrun-test-1-1",
 							Namespace: "default",
@@ -93,7 +93,7 @@ var _ = Describe("Tekton", func() {
 			})
 			It("returns nil for not supported kind", func() {
 				t := &tekton.Tekton{
-					PipelineRun: tekton.PipelineRunPayload{
+					PipelineRun: &tekton.PipelineRunPayload{
 						NamespacedName: types.NamespacedName{
 							Name:      "not-supported-test",
 							Namespace: "default",
