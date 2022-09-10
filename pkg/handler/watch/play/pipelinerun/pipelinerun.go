@@ -18,32 +18,26 @@ Created on 24/01/2021
 package pipelinerun
 
 import (
+	"context"
 	"time"
 
 	"github.com/avast/retry-go"
-	"github.com/go-logr/logr"
-	"k8s.io/apimachinery/pkg/types"
-
 	"github.com/w6d-io/ci-status/internal/tekton"
+	"github.com/w6d-io/x/logx"
 )
 
 const KIND = "pipelinerun"
 
 // Scan stars the scan of pipeline run tekton resource
-func Scan(logger logr.Logger, nn types.NamespacedName, projectID int64, eventId int64,
-	payload *tekton.PipelineRunPayload) error {
-	log := logger.WithName("Scan").WithValues("kind", "pipelinerun").
-		WithValues("name", nn)
+func Scan(ctx context.Context, payload *tekton.PipelineRunPayload) error {
+	log := logx.WithName(ctx, "Scan").WithValues("name", payload.NamespacedName())
 	log.V(1).Info("start")
 	defer log.V(1).Info("stop")
 	if err := retry.Do(func() error {
 		t := &tekton.Tekton{
-			ProjectID:   projectID,
-			EventID:     eventId,
-			Log:         logger,
 			PipelineRun: payload,
 		}
-		if err := t.PipelineRunSupervise(); err != nil {
+		if err := t.PipelineRunSupervise(ctx); err != nil {
 			return err
 		}
 		return nil

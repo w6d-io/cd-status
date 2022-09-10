@@ -14,35 +14,35 @@ See the License for the specific language governing permissions and
 limitations under the License.
 Created on 06/02/2021
 */
+
 package tekton
 
 import (
+	"context"
+	"fmt"
 	tkn "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
-	"strings"
+	"github.com/w6d-io/x/logx"
 )
 
 const (
 	pendingState = "---"
 )
 
-var genStepList = []string{
-	"create-dir-builddocker",
-	"git-source",
-	"image-digest-exporter",
-}
-
-func GetSteps(status tkn.TaskRunStatus) (steps []Step) {
-	log := logger.WithName("GetSteps")
+func (t *Task) SetActionsStatus(ctx context.Context, status *tkn.TaskRunStatus) {
+	log := logx.WithName(ctx, "Task.SetActionsStatus")
+	log.V(2).Info("start")
 	if (len(status.Steps) != 0 && status.Steps[0].Waiting == nil) &&
 		(status.Steps[0].Terminated != nil || status.Steps[0].Running != nil) {
 		log.V(1).Info("setting")
 		for _, step := range status.Steps {
-			log.V(1).Info("append", "name", step.Name, "status", StepReasonExists(step))
-			steps = append(steps, Step{
-				Name:    FormattedStepName(step.Name),
-				RawName: step.Name,
-				Status:  StepReasonExists(step),
-			})
+			log.V(2).Info("in loop", "step", step.Name)
+			for i := range t.Actions {
+				log.V(2).Info("in loop 2", "action", t.Actions[i].ID)
+				if fmt.Sprintf("step-%s", t.Actions[i].ID) == step.Name || t.Actions[i].ID == step.Name {
+					t.Actions[i].Status = StepReasonExists(step)
+					log.V(1).Info("action", "name", t.Actions[i].Name, "id", t.Actions[i].ID, "status", t.Actions[i].Status)
+				}
+			}
 		}
 	}
 	return
@@ -56,6 +56,9 @@ func StepReasonExists(state tkn.StepState) string {
 			return "Running"
 		}
 		if state.Terminated != nil {
+			if state.Terminated.Reason == "Completed" {
+				return "Succeeded"
+			}
 			return state.Terminated.Reason
 		}
 		return pendingState
@@ -64,12 +67,12 @@ func StepReasonExists(state tkn.StepState) string {
 }
 
 // FormattedStepName ...
-func FormattedStepName(name string) string {
-
-	for _, gen := range genStepList {
-		if strings.HasPrefix(name, gen) {
-			return gen
-		}
-	}
-	return name
-}
+//func FormattedStepName(name string) string {
+//
+//    for _, gen := range genStepList {
+//        if strings.HasPrefix(name, gen) {
+//            return gen
+//        }
+//    }
+//    return name
+//}

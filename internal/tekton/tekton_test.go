@@ -17,17 +17,17 @@ Created on 28/01/2021
 package tekton_test
 
 import (
-	corev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"knative.dev/pkg/apis/duck/v1beta1"
 	"time"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
 	tkn "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
+	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"knative.dev/pkg/apis/duck/v1beta1"
+
 	"github.com/w6d-io/ci-status/internal/tekton"
-	"k8s.io/apimachinery/pkg/types"
 )
 
 var _ = Describe("Tekton", func() {
@@ -35,14 +35,9 @@ var _ = Describe("Tekton", func() {
 		When("resource does not exist", func() {
 			It("returns nil for pods", func() {
 				t := &tekton.Tekton{
-					PipelineRun: &tekton.PipelineRunPayload{
-						NamespacedName: types.NamespacedName{
-							Name:      "pod-test-1-1",
-							Namespace: "default",
-						},
-					},
+					PipelineRun: &tekton.PipelineRunPayload{},
 				}
-				Expect(t.GetWatch("pods", "test")).To(BeNil())
+				Expect(t.GetWatch(ctx, "pods", "test")).To(BeNil())
 			})
 		})
 	})
@@ -50,12 +45,7 @@ var _ = Describe("Tekton", func() {
 		When("resource does not exist", func() {
 			It("returns nil for pods", func() {
 				t := &tekton.Tekton{
-					PipelineRun: &tekton.PipelineRunPayload{
-						NamespacedName: types.NamespacedName{
-							Name:      "pod-test-1-1",
-							Namespace: "default",
-						},
-					},
+					PipelineRun: &tekton.PipelineRunPayload{},
 				}
 				pr := &tkn.PipelineRun{
 					Status: tkn.PipelineRunStatus{
@@ -69,7 +59,7 @@ var _ = Describe("Tekton", func() {
 						},
 					},
 				}
-				Expect(t.PipelineRun.GetTasks(pr)).To(BeNil())
+				Expect(t.PipelineRun.GetTasks(ctx, pr)).To(BeNil())
 			})
 		})
 	})
@@ -87,71 +77,7 @@ var _ = Describe("Tekton", func() {
 			Expect(ts.Len()).To(Equal(2))
 			Expect(ts.Less(0, 1)).To(Equal(true))
 			ts.Swap(0, 1)
-			ts[1].StartTimeRaw = &metav1.Time{
-				Time: time.Now().AddDate(0, 0, -1),
-			}
 			ts.Swap(0, 1)
-			ts[0].StartTimeRaw = &metav1.Time{
-				Time: time.Now().AddDate(0, 0, 0),
-			}
-			ts.Swap(0, 1)
-			ts[1].StartTimeRaw = &metav1.Time{
-				Time: time.Now().AddDate(0, 0, 0),
-			}
-			ts[0].StartTimeRaw = &metav1.Time{
-				Time: time.Now().AddDate(0, 0, -1),
-			}
-			ts.Swap(0, 1)
-		})
-	})
-	Context("get condition", func() {
-		It("get none", func() {
-			c := v1beta1.Conditions{}
-			status, reason := tekton.Condition(c)
-			Expect(status).To(Equal("---"))
-			Expect(reason).To(Equal(""))
-		})
-		It("get a status Cancelled", func() {
-			c := v1beta1.Conditions{
-				{
-					Status: corev1.ConditionFalse,
-					Reason: "PipelineRunCancelled",
-				},
-			}
-			status, reason := tekton.Condition(c)
-			Expect(status).To(Equal("Cancelled"))
-			Expect(reason).To(Equal("Pipeline cancelled"))
-		})
-		It("get a status Cancelled", func() {
-			c := v1beta1.Conditions{
-				{
-					Status: corev1.ConditionFalse,
-					Reason: "PipelineRunTimeout",
-				},
-			}
-			status, reason := tekton.Condition(c)
-			Expect(status).To(Equal("Failed"))
-			Expect(reason).To(Equal("Pipeline timeout"))
-		})
-		It("get a status Running", func() {
-			c := v1beta1.Conditions{
-				{
-					Status: corev1.ConditionUnknown,
-				},
-			}
-			status, reason := tekton.Condition(c)
-			Expect(status).To(Equal("Running"))
-			Expect(reason).To(Equal(""))
-		})
-		It("get a status Succeeded", func() {
-			c := v1beta1.Conditions{
-				{
-					Status: corev1.ConditionTrue,
-				},
-			}
-			status, reason := tekton.Condition(c)
-			Expect(status).To(Equal("Succeeded"))
-			Expect(reason).To(Equal(""))
 		})
 	})
 	Context("check condition terminated", func() {

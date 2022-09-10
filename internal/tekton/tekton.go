@@ -21,6 +21,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/w6d-io/x/logx"
 	"strings"
 
 	corev1 "k8s.io/api/core/v1"
@@ -34,9 +35,9 @@ import (
 )
 
 // GetWatch gets the watch interface for pipelineruns, taskruns and pods
-func (t *Tekton) GetWatch(kind string, name string) (w watch.Interface) {
-	log := logger.WithName("GetWatch").WithValues("object", t.PipelineRun.NamespacedName.String(), "kind", kind)
-	namespace := t.PipelineRun.NamespacedName.Namespace
+func (t *Tekton) GetWatch(ctx context.Context, kind string, name string) (w watch.Interface) {
+	log := logx.WithName(ctx, "GetWatch").WithValues("object", t.PipelineRun.NamespacedName().String(), "watch_kind", kind)
+	namespace := t.PipelineRun.NamespacedName().Namespace
 	//tknParam := cli.TektonParams{}
 	var err error
 	timeout := int64(config.GetTimeout().Seconds())
@@ -113,8 +114,8 @@ func (t Tasks) Less(i, j int) bool {
 	return t[i].StartTime < t[j].StartTime
 }
 
-// Condition returns a human readable text based on the status of the Condition
-func Condition(c v1beta1.Conditions) (status string, reason string) {
+// GetStatusFromCondition returns a human readable text based on the status of the GetStatusFromCondition
+func GetStatusFromCondition(c v1beta1.Conditions) (status string, reason string) {
 	if len(c) == 0 {
 		return "---", ""
 	}

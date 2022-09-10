@@ -17,8 +17,13 @@ Created on 25/01/2021
 package tekton_test
 
 import (
+	"context"
 	tkn "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
+	zapraw "go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 	"k8s.io/client-go/kubernetes/scheme"
+	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 	"testing"
 
 	"k8s.io/client-go/rest"
@@ -32,6 +37,7 @@ import (
 var cfg *rest.Config
 var k8sClient client.Client
 var testEnv *envtest.Environment
+var ctx context.Context
 
 func TestTekton(t *testing.T) {
 	RegisterFailHandler(Fail)
@@ -55,7 +61,29 @@ var _ = BeforeSuite(func(done Done) {
 	k8sClient, err = client.New(cfg, client.Options{Scheme: scheme.Scheme})
 	Expect(err).ToNot(HaveOccurred())
 	Expect(k8sClient).ToNot(BeNil())
-
+	encoder := zapcore.EncoderConfig{
+		// Keys can be anything except the empty string.
+		TimeKey:        "T",
+		LevelKey:       "L",
+		NameKey:        "N",
+		CallerKey:      "C",
+		MessageKey:     "M",
+		StacktraceKey:  "S",
+		LineEnding:     zapcore.DefaultLineEnding,
+		EncodeLevel:    zapcore.CapitalLevelEncoder,
+		EncodeTime:     zapcore.ISO8601TimeEncoder,
+		EncodeDuration: zapcore.StringDurationEncoder,
+		EncodeCaller:   zapcore.FullCallerEncoder,
+	}
+	opts := zap.Options{
+		Encoder:         zapcore.NewConsoleEncoder(encoder),
+		Development:     true,
+		StacktraceLevel: zapcore.PanicLevel,
+		Level:           zapcore.Level(int8(-2)),
+	}
+	ctrl.SetLogger(zap.New(zap.UseFlagOptions(&opts), zap.RawZapOpts(zapraw.AddCaller(), zapraw.AddCallerSkip(-2))))
+	ctx = context.Background()
+	ctx = context.WithValue(ctx, "kind", "test")
 	close(done)
 }, 60)
 

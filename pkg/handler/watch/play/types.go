@@ -18,46 +18,12 @@ Created on 24/01/2021
 package play
 
 import (
-	"github.com/go-logr/logr"
+	"context"
 	"github.com/w6d-io/ci-status/internal/tekton"
-	"k8s.io/apimachinery/pkg/types"
 )
 
 type Payload struct {
-	Object    *Object                    `json:"object,omitempty"`
-	ProjectID int64                      `json:"projectId,omitempty"`
-	EventID   int64                      `json:"eventId,omitempty"`
-	RepoURL   string                     `json:"repo_url,omitempty"`
-	Commit    Commit                     `json:"ref,omitempty"`
-	Stack     Stack                      `json:"stack,omitempty"`
-	Status    string                     `json:"status,omitempty"`
-	Payload   *tekton.PipelineRunPayload `json:"payload"`
-}
-
-// Commit contains all git information
-type Commit struct {
-	// SHA contains git commit SHA
-	SHA string `json:"sha,omitempty"`
-
-	// Ref contains git commit reference
-	Ref string `json:"ref,omitempty"`
-
-	// Message contains commit message
-	Message string `json:"message,omitempty"`
-}
-
-type Object struct {
-	Kind           string               `json:"kind,omitempty"`
-	NamespacedName types.NamespacedName `json:"namespaced_name,omitempty"`
-}
-
-// Stack contains the language and package of the source
-type Stack struct {
-	// Language contains the repository language
-	Language string `json:"language,omitempty"`
-
-	// Package contains the package use in application
-	Package string `json:"package,omitempty"`
+	Payload *tekton.PipelineRunPayload `json:"payload"`
 }
 
 type Interface interface {
@@ -65,8 +31,8 @@ type Interface interface {
 }
 
 var (
-	scans = make(map[string]func(logr.Logger, types.NamespacedName, int64, int64, *tekton.PipelineRunPayload) error)
-	scan  func(logr.Logger, types.NamespacedName, int64, int64, *tekton.PipelineRunPayload) error
+	scans = make(map[string]func(context.Context, *tekton.PipelineRunPayload) error)
+	scan  func(context.Context, *tekton.PipelineRunPayload) error
 
 	ok bool
 )

@@ -88,7 +88,7 @@ format: bin/goimports
 
 # Build the docker image
 .PHONY: docker-build
-docker-build: test
+docker-build:
 	docker build --build-arg=VERSION=${VERSION} --build-arg=VCS_REF=${VCS_REF} --build-arg=BUILD_DATE=${BUILD_DATE}  -t ${IMG} .
 
 # Push the docker image

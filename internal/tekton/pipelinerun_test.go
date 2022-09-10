@@ -21,12 +21,9 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	tkn "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	ctrl "sigs.k8s.io/controller-runtime"
-
 	"github.com/w6d-io/ci-status/internal/config"
 	"github.com/w6d-io/ci-status/internal/tekton"
-	"k8s.io/apimachinery/pkg/types"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 var _ = Describe("Tekton", func() {
@@ -41,18 +38,12 @@ var _ = Describe("Tekton", func() {
 				err = createPipelineRun("pod-test-1-1")
 				Expect(err).NotTo(Succeed())
 				t := &tekton.Tekton{
-					PipelineRun: &tekton.PipelineRunPayload{
-						NamespacedName: types.NamespacedName{
-							Name:      "pod-test-1-1",
-							Namespace: "default",
-						},
-					},
-					Log: ctrl.Log.WithName("test"),
+					PipelineRun: &tekton.PipelineRunPayload{},
 				}
-				err = t.PipelineRunSupervise()
+				err = t.PipelineRunSupervise(context.Background())
 				Expect(err).NotTo(Succeed())
 				Expect(err.Error()).To(Equal("failed to get pipelinerun default/pod-test-1-1 watch"))
-				deletePipelineRun("pr-test-1-1")
+				//deletePipelineRun("pr-test-1-1")
 			})
 		})
 	})
@@ -60,47 +51,27 @@ var _ = Describe("Tekton", func() {
 		When("resource does not exist", func() {
 			It("returns nil for pods", func() {
 				t := &tekton.Tekton{
-					PipelineRun: &tekton.PipelineRunPayload{
-						NamespacedName: types.NamespacedName{
-							Name:      "pod-test-1-1",
-							Namespace: "default",
-						},
-					},
+					PipelineRun: &tekton.PipelineRunPayload{},
 				}
-				Expect(t.GetWatch("pods", "test")).To(BeNil())
+				Expect(t.GetWatch(ctx, "pods", "test")).To(BeNil())
 			})
 			It("returns nil for pipelineruns", func() {
 				t := &tekton.Tekton{
-					PipelineRun: &tekton.PipelineRunPayload{
-						NamespacedName: types.NamespacedName{
-							Name:      "pipeline-run-test-1-1",
-							Namespace: "default",
-						},
-					},
+					PipelineRun: &tekton.PipelineRunPayload{},
 				}
-				Expect(t.GetWatch("pipelineruns", "test")).To(BeNil())
+				Expect(t.GetWatch(ctx, "pipelineruns", "test")).To(BeNil())
 			})
 			It("returns not nil for taskruns", func() {
 				t := &tekton.Tekton{
-					PipelineRun: &tekton.PipelineRunPayload{
-						NamespacedName: types.NamespacedName{
-							Name:      "taskrun-test-1-1",
-							Namespace: "default",
-						},
-					},
+					PipelineRun: &tekton.PipelineRunPayload{},
 				}
-				Expect(t.GetWatch("taskruns", "test")).To(BeNil())
+				Expect(t.GetWatch(ctx, "taskruns", "test")).To(BeNil())
 			})
 			It("returns nil for not supported kind", func() {
 				t := &tekton.Tekton{
-					PipelineRun: &tekton.PipelineRunPayload{
-						NamespacedName: types.NamespacedName{
-							Name:      "not-supported-test",
-							Namespace: "default",
-						},
-					},
+					PipelineRun: &tekton.PipelineRunPayload{},
 				}
-				Expect(t.GetWatch("not-supported", "test")).To(BeNil())
+				Expect(t.GetWatch(ctx, "not-supported", "test")).To(BeNil())
 			})
 		})
 	})
