@@ -12,7 +12,6 @@ github.com/beorn7/perks/quantile
 # github.com/cespare/xxhash/v2 v2.1.1
 github.com/cespare/xxhash/v2
 # github.com/confluentinc/confluent-kafka-go v1.5.2
-## explicit
 github.com/confluentinc/confluent-kafka-go/kafka
 github.com/confluentinc/confluent-kafka-go/kafka/librdkafka
 # github.com/davecgh/go-spew v1.1.1
@@ -30,7 +29,7 @@ github.com/fsnotify/fsnotify
 github.com/ghodss/yaml
 # github.com/gin-contrib/sse v0.1.0
 github.com/gin-contrib/sse
-# github.com/gin-gonic/gin v1.7.2
+# github.com/gin-gonic/gin v1.7.7
 ## explicit
 github.com/gin-gonic/gin
 github.com/gin-gonic/gin/binding
