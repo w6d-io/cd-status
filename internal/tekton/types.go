@@ -28,7 +28,7 @@ import (
 type Field int
 
 const (
-//Timeout Field = iota + 1
+// Timeout Field = iota + 1
 )
 
 type Tekton struct {

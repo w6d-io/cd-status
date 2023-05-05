@@ -3,6 +3,7 @@ IMG ?= w6dio/ci-status:latest
 export GO111MODULE  := on
 export PATH         := ./bin:${PATH}
 export NEXT_TAG     ?=
+export CGO_ENABLED   = 1
 
 ifeq (,$(shell go env GOBIN))
 GOBIN=$(shell go env GOPATH)/bin
