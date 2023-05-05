@@ -14,7 +14,7 @@ replace (
 
 require (
 	github.com/avast/retry-go v3.0.0+incompatible
-	github.com/gin-gonic/gin v1.7.7
+	github.com/gin-gonic/gin v1.9.0
 	github.com/go-logr/logr v0.4.0
 	github.com/go-logr/zapr v0.4.0 // indirect
 	github.com/google/uuid v1.2.0
@@ -23,6 +23,7 @@ require (
 	github.com/onsi/gomega v1.10.5
 	github.com/tektoncd/cli v0.16.0
 	github.com/tektoncd/pipeline v0.21.0
+	github.com/ugorji/go v1.1.7 // indirect
 	github.com/w6d-io/hook v0.1.2
 	go.uber.org/zap v1.16.0
 	gopkg.in/yaml.v2 v2.4.0
