@@ -18,16 +18,13 @@ Created on 23/01/2021
 package router
 
 import (
-	"net/http"
+    "net/http"
 
-	ctrl "sigs.k8s.io/controller-runtime"
-
-	"github.com/gin-gonic/gin"
+    "github.com/gin-gonic/gin"
 )
 
 // engine is the gin Engine instance in router package
 var (
-	server = &http.Server{}
-	engine = gin.New()
-	logger = ctrl.Log.WithName("Router")
+    server = &http.Server{}
+    engine = gin.New()
 )

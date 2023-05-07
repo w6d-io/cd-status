@@ -15,31 +15,3 @@ limitations under the License.
 Created on 26/01/2021
 */
 package pipelinerun_test
-
-//var _ = Describe("PipelineRun", func() {
-//	Context("Scan", func() {
-//		When("payload is good", func() {
-//			//BeforeEach(func() {
-//			//	resource, err := versionedResource.NewForConfig(cfg)
-//			//	Expect(err).NotTo(HaveOccurred())
-//			//	tc, err := versioned.NewForConfig(cfg)
-//			//	Expect(err).NotTo(HaveOccurred())
-//			//	c:= &cli.Clients{
-//			//		Tekton: tc,
-//			//		Kube: k8scs,
-//			//		Resource: resource,
-//			//	}
-//			//	t := tekton.Tekton{}
-//			//	t.SetClient(c)
-//			//})
-//			It("return no error", func() {
-//				log := ctrl.Log.WithName("unit-test")
-//				nn := types.NamespacedName{}
-//				_ = pipelinerun.Scan(log, nn, 1, 1,
-//					"ac12ac12ac12ac12ac12ac12", "test", "test",
-//					"https://test.example.com/repo")
-//				//Expect(err).To(Succeed())
-//			})
-//		})
-//	})
-//})

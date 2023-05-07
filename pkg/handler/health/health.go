@@ -14,20 +14,21 @@ See the License for the specific language governing permissions and
 limitations under the License.
 Created on 19/02/2021
 */
+
 package health
 
 import (
-	"github.com/gin-gonic/gin"
-	"github.com/w6d-io/ci-status/pkg/router"
+    "github.com/gin-gonic/gin"
+    "github.com/w6d-io/ci-status/pkg/router"
 )
 
 type Healthy struct{}
 
 func init() {
-	router.AddGET("/health", Health)
+    router.AddGET("/health", Health)
 }
 
 // Health call for liveliness and readiness
 func Health(c *gin.Context) {
-	c.JSON(200, gin.H{"status": "ok"})
+    c.JSON(200, gin.H{"status": "ok"})
 }

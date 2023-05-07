@@ -18,67 +18,68 @@ Created on 23/01/2021
 package router
 
 import (
-	"net/http"
-	"os"
-	"os/signal"
+    "net/http"
+    "os"
+    "os/signal"
+    "syscall"
 
-	"github.com/gin-gonic/gin"
-	"github.com/w6d-io/ci-status/internal/config"
+    "github.com/gin-gonic/gin"
+    "github.com/w6d-io/ci-status/internal/config"
 )
 
-func init() {
-	engine.Use(LogMiddleware())
-	engine.Use(gin.Recovery())
-	engine.Use(CorrelationID())
-	if config.IsAuth() {
-		engine.Use(Auth())
-	}
+var Address string
 
+func init() {
+    engine.Use(LogMiddleware())
+    engine.Use(gin.Recovery())
+    if config.IsAuth() {
+        engine.Use(Auth())
+    }
 }
 
 // AddPOST adds handler and path to the engine
 func AddPOST(relativePath string, handlers ...gin.HandlerFunc) {
-	engine.POST(relativePath, handlers...)
+    engine.POST(relativePath, handlers...)
 }
 
 // AddGET adds handler and path to the engine
 func AddGET(relativePath string, handlers ...gin.HandlerFunc) {
-	engine.GET(relativePath, handlers...)
+    engine.GET(relativePath, handlers...)
 }
 
 // Run execute le gin router
 func Run() error {
 
-	server.Addr = config.GetListen()
-	server.Handler = engine
+    server.Addr = Address
+    server.Handler = engine
 
-	quit := make(chan os.Signal)
-	signal.Notify(quit, os.Interrupt)
-	signal.Notify(quit, os.Kill)
-	go func() {
-		<-quit
-		logger.Info("receive interrupt or kill signal")
-		if err := server.Close(); err != nil {
-			logger.Error(err, "Server closed")
-			os.Exit(1)
-		}
-	}()
-	logger.WithValues("address", config.GetListen()).Info("Listening and serving HTTP")
-	if err := server.ListenAndServe(); err != nil {
-		if err == http.ErrServerClosed {
-			logger.Info("Server closed under request")
-			return nil
-		}
-		logger.Error(err, "Server closed unexpect")
-		return err
-	}
-	return nil
+    quit := make(chan os.Signal)
+    signal.Notify(quit, syscall.SIGINT)
+    signal.Notify(quit, syscall.SIGKILL)
+    go func() {
+        <-quit
+        logger.Info("receive interrupt or kill signal")
+        if err := server.Close(); err != nil {
+            logger.Error(err, "Server closed")
+            os.Exit(1)
+        }
+    }()
+    logger.WithValues("address", Address).Info("Listening and serving HTTP")
+    if err := server.ListenAndServe(); err != nil {
+        if err == http.ErrServerClosed {
+            logger.Info("Server closed under request")
+            return nil
+        }
+        logger.Error(err, "Server closed unexpect")
+        return err
+    }
+    return nil
 }
 
 // Stop the http server
 func Stop() error {
-	if server != nil {
-		return server.Close()
-	}
-	return nil
+    if server != nil {
+        return server.Close()
+    }
+    return nil
 }

@@ -18,85 +18,110 @@ Created on 22/01/2021
 package config
 
 import (
-	"github.com/w6d-io/hook"
-	"gopkg.in/yaml.v2"
-	"io/ioutil"
-	"time"
+    "context"
+    "github.com/fsnotify/fsnotify"
+    "github.com/w6d-io/ci-status/internal/tekton"
+    "github.com/w6d-io/ci-status/pkg/router"
+    "os"
+    "path/filepath"
+    "strings"
+    "time"
 
-	ctrl "sigs.k8s.io/controller-runtime"
+    "github.com/spf13/viper"
+    "github.com/w6d-io/ci-status/internal/embedx"
+    "github.com/w6d-io/jsonschema"
+    "github.com/w6d-io/x/cmdx"
+    "github.com/w6d-io/x/logx"
 )
 
-func New(filename string) error {
-	// TODO add dynamic configuration feature
-	log := ctrl.Log.WithName("controllers").WithName("Config")
-	log.V(1).Info("read config file")
-	config = new(Config)
-	data, err := ioutil.ReadFile(filename)
-	if err != nil {
-		log.Error(err, "error reading the configuration")
-		return err
-	}
-	if err := yaml.Unmarshal(data, config); err != nil {
-		log.Error(err, "Error unmarshal the configuration")
-		return err
-	}
-	for _, wh := range config.Hooks {
-		if err := hook.Subscribe(wh.URL, wh.Scope); err != nil {
-			log.Error(err, "hook subscription failed")
-			return err
-		}
-	}
-	if config.Timeout == 0 {
-		config.Timeout = int64(time.Minute * 60)
-	}
-	if config.Listen == "" {
-		config.Listen = ":8080"
-	}
-	return nil
+var (
+    // Version of application
+    Version string
+
+    // Revision is the commit of this version
+    Revision string
+
+    // Built is the timestamp od this version
+    Built string
+
+    // CfgFile contain the path of the config file
+    CfgFile string
+
+    // OsExit is hack for unit-test
+    OsExit = os.Exit
+
+    // SkipValidation toggling the config validation
+    SkipValidation bool
+)
+
+func setDefault() {
+    viper.SetDefault(ViperKeyHTTPListen, ":8080")
+    viper.SetDefault(ViperTimeout, time.Hour)
 }
 
-// GetConfig return the Config instance
-func GetConfig() *Config {
-	return config
+func Init() {
+    base := filepath.Base(CfgFile)
+    log := logx.WithName(nil, "Config.Init")
+    ext := filepath.Ext(CfgFile)
+    log.V(2).Info("viper",
+        "path", CfgFile,
+        "ext", filepath.Ext(CfgFile),
+        "type", strings.TrimLeft(ext, "."),
+        "configName", FileNameWithoutExtension(base),
+        "base", base,
+        "dir", filepath.Dir(CfgFile),
+    )
+    setDefault()
+    viper.SetConfigName(FileNameWithoutExtension(base))
+    viper.SetConfigType(strings.TrimLeft(ext, "."))
+    viper.AddConfigPath(filepath.Dir(CfgFile))
+    viper.AddConfigPath(".")
+    viper.AddConfigPath("$HOME/.ci_status")
+
+    viper.SetEnvPrefix("cs")
+    viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
+    viper.AutomaticEnv()
+    if err := viper.ReadInConfig(); err != nil {
+        if _, ok := err.(viper.ConfigFileNotFoundError); !ok {
+            logx.WithName(context.TODO(), "Config").Error(err, "failed to read config")
+            OsExit(1)
+            return
+        }
+        log.Error(err, "config not found")
+        return
+    }
+    var c Config
+    cmdx.Should(viper.Unmarshal(&c), "unmarshal config failed")
+    if !SkipValidation {
+        log.Info("run config validation")
+        cmdx.Must(jsonschema.AddSchema(jsonschema.Config, embedx.ConfigSchema), "add config schema failed")
+        cmdx.Must(jsonschema.Config.Validate(&c), "config validation failed")
+    }
+    log.Info("config loaded", "file", viper.ConfigFileUsed())
+    cmdx.Must(hookSubscription(), "hook subscription failed")
+    initClient()
+    viper.WatchConfig()
+    viper.OnConfigChange(onChange())
+    return
 }
 
-// GetListen return the listening address for api
-func GetListen() string {
-	return config.Listen
+func initClient() {
+    router.Address = viper.GetString(ViperKeyHTTPListen)
+    tekton.Timeout = viper.GetDuration(ViperTimeout)
+    if config.Timeout == 0 {
+        config.Timeout = viper.GetDuration(ViperTimeout)
+    }
+}
+func onChange() func(event fsnotify.Event) {
+    return func(e fsnotify.Event) {
+        log := logx.WithName(nil, "Config").WithName("onChange")
+        log.Info("config changed", "file", e.Name)
+
+        initClient()
+    }
 }
 
-// SetListen return the listening address for api
-func SetListen(address string) {
-	config.Listen = address
-}
-
-// GetTimeout return the timeout set in config
-func GetTimeout() time.Duration {
-	return time.Duration(config.Timeout) * time.Minute
-}
-
-// SetTimeout record the timeout in config
-func SetTimeout(timeout int64) error {
-	config.Timeout = timeout
-	return nil
-}
-
-// SetAuth return the auth list from config
-func SetAuth(auth []Auth) {
-	config.Auth = auth
-}
-
-// GetAuth return the auth list from config
-func GetAuth() []Auth {
-	return config.Auth
-}
-
-// IsInArray checks if the needle in part of haystack
-func IsInArray(needle string, haystack []string) bool {
-	for _, elem := range haystack {
-		if elem == needle {
-			return true
-		}
-	}
-	return false
+// FileNameWithoutExtension returns the
+func FileNameWithoutExtension(fileName string) string {
+    return strings.TrimSuffix(fileName, filepath.Ext(fileName))
 }

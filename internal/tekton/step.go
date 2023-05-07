@@ -14,62 +14,65 @@ See the License for the specific language governing permissions and
 limitations under the License.
 Created on 06/02/2021
 */
+
 package tekton
 
 import (
-	tkn "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
-	"strings"
+    "context"
+    tkn "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
+    "github.com/w6d-io/x/logx"
+    "strings"
 )
 
 const (
-	pendingState = "---"
+    pendingState = "---"
 )
 
 var genStepList = []string{
-	"create-dir-builddocker",
-	"git-source",
-	"image-digest-exporter",
+    "create-dir-builddocker",
+    "git-source",
+    "image-digest-exporter",
 }
 
-func GetSteps(status tkn.TaskRunStatus) (steps []Step) {
-	log := logger.WithName("GetSteps")
-	if (len(status.Steps) != 0 && status.Steps[0].Waiting == nil) &&
-		(status.Steps[0].Terminated != nil || status.Steps[0].Running != nil) {
-		log.V(1).Info("setting")
-		for _, step := range status.Steps {
-			log.V(1).Info("append", "name", step.Name, "status", StepReasonExists(step))
-			steps = append(steps, Step{
-				Name:    FormattedStepName(step.Name),
-				RawName: step.Name,
-				Status:  StepReasonExists(step),
-			})
-		}
-	}
-	return
+func GetSteps(ctx context.Context, status tkn.TaskRunStatus) (steps []Step) {
+    log := logx.WithName(ctx, "GetSteps")
+    if (len(status.Steps) != 0 && status.Steps[0].Waiting == nil) &&
+        (status.Steps[0].Terminated != nil || status.Steps[0].Running != nil) {
+        log.V(1).Info("setting")
+        for _, step := range status.Steps {
+            log.V(1).Info("append", "name", step.Name, "status", StepReasonExists(ctx, step))
+            steps = append(steps, Step{
+                Name:    FormattedStepName(step.Name),
+                RawName: step.Name,
+                Status:  StepReasonExists(ctx, step),
+            })
+        }
+    }
+    return
 }
 
 // StepReasonExists ...
-func StepReasonExists(state tkn.StepState) string {
-	logger.V(1).Info("StepReasonExists")
-	if state.Waiting == nil {
-		if state.Running != nil {
-			return "Running"
-		}
-		if state.Terminated != nil {
-			return state.Terminated.Reason
-		}
-		return pendingState
-	}
-	return state.Waiting.Reason
+func StepReasonExists(ctx context.Context, state tkn.StepState) string {
+    logx.WithName(ctx, "StepReasonExists").V(1).Info("call")
+    if state.Waiting == nil {
+        if state.Running != nil {
+            return "Running"
+        }
+        if state.Terminated != nil {
+            return state.Terminated.Reason
+        }
+        return pendingState
+    }
+    return state.Waiting.Reason
 }
 
 // FormattedStepName ...
 func FormattedStepName(name string) string {
 
-	for _, gen := range genStepList {
-		if strings.HasPrefix(name, gen) {
-			return gen
-		}
-	}
-	return name
+    for _, gen := range genStepList {
+        if strings.HasPrefix(name, gen) {
+            return gen
+        }
+    }
+    return name
 }

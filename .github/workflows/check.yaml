@@ -12,14 +12,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Git Checkout
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
 
     - name: Get kubebuilder
-      uses: RyanSiu1995/kubebuilder-action@v1.1
+      uses: RyanSiu1995/kubebuilder-action@v1.3.0
       with:
-        version: 2.3.1
+        version: 3.10.0
     - name: Set up Go
-      uses: actions/setup-go@v2
+      uses: actions/setup-go@v4
       with:
         go-version: 1.15
 
