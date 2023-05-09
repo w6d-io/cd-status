@@ -35,7 +35,7 @@ LABEL maintainer="${USER_NAME} <${USER_EMAIL}>" \
         io.w6d.ci.build-date=$BUILD_DATE \
         io.w6d.ci.version=$VERSION
 WORKDIR /
-COPY --from=builder //gitlab.w6d.io/w6d/ci-status/ci-status .
+COPY --from=builder /gitlab.w6d.io/w6d/ci-status/ci-status .
 USER 1001:1001
 
 ENTRYPOINT ["/ci-status"]

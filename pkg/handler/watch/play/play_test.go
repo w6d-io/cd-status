@@ -5,7 +5,7 @@ import (
 	"errors"
 	"github.com/w6d-io/ci-status/internal/tekton"
 	"github.com/w6d-io/ci-status/pkg/handler/watch/play"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -47,7 +47,7 @@ var _ = Describe("Watch", func() {
 						return nil
 					}
 					play.AddWatcher("test", f)
-					r := ioutil.NopCloser(strings.NewReader(payload))
+					r := io.NopCloser(strings.NewReader(payload))
 					w := httptest.NewRecorder()
 					c, _ := gin.CreateTestContext(w)
 					c.Request = &http.Request{
@@ -64,7 +64,7 @@ var _ = Describe("Watch", func() {
   "repo_url": " https://github.com/w6d-io/nodejs-sample.git"
 }
 `
-					r := ioutil.NopCloser(strings.NewReader(payload))
+					r := io.NopCloser(strings.NewReader(payload))
 					w := httptest.NewRecorder()
 					c, _ := gin.CreateTestContext(w)
 					c.Request = &http.Request{
@@ -92,7 +92,7 @@ var _ = Describe("Watch", func() {
 						return errors.New("test")
 					}
 					play.AddWatcher("test", f)
-					r := ioutil.NopCloser(strings.NewReader(payload))
+					r := io.NopCloser(strings.NewReader(payload))
 					w := httptest.NewRecorder()
 					c, _ := gin.CreateTestContext(w)
 					c.Request = &http.Request{
@@ -121,7 +121,7 @@ var _ = Describe("Watch", func() {
 						return nil
 					}
 					play.AddWatcher("test", f)
-					r := ioutil.NopCloser(strings.NewReader(payload))
+					r := io.NopCloser(strings.NewReader(payload))
 					w := httptest.NewRecorder()
 					c, _ := gin.CreateTestContext(w)
 					c.Request = &http.Request{
@@ -148,7 +148,7 @@ var _ = Describe("Watch", func() {
 						return nil
 					}
 					play.AddWatcher("test", f)
-					r := ioutil.NopCloser(strings.NewReader(payload))
+					r := io.NopCloser(strings.NewReader(payload))
 					w := httptest.NewRecorder()
 					c, _ := gin.CreateTestContext(w)
 					c.Request = &http.Request{
@@ -175,7 +175,7 @@ var _ = Describe("Watch", func() {
 						return errors.New("test")
 					}
 					play.AddWatcher("test", f)
-					r := ioutil.NopCloser(strings.NewReader(payload))
+					r := io.NopCloser(strings.NewReader(payload))
 					w := httptest.NewRecorder()
 					c, _ := gin.CreateTestContext(w)
 					c.Request = &http.Request{
@@ -202,7 +202,7 @@ var _ = Describe("Watch", func() {
 						return nil
 					}
 					play.AddWatcher("test", f)
-					r := ioutil.NopCloser(strings.NewReader(payload))
+					r := io.NopCloser(strings.NewReader(payload))
 					w := httptest.NewRecorder()
 					c, _ := gin.CreateTestContext(w)
 					c.Request = &http.Request{
